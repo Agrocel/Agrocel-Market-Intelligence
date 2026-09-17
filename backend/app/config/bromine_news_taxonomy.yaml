@@ -1,0 +1,128 @@
+# Bromine Market News Taxonomy & Search Terms Registry
+# Editable configuration defining keywords, competitors, event categories, and relevance thresholds.
+
+product_keywords:
+  - "bromine"
+  - "elemental bromine"
+  - "bromine price"
+  - "bromine market"
+  - "bromine capacity"
+  - "bromine plant"
+  - "bromine production"
+  - "bromine supply disruption"
+  - "bromine export"
+  - "bromine import"
+  - "bromine regulation"
+  - "bromine demand"
+  - "bromine shortage"
+  - "brine chemicals"
+  - "hydrobromic acid"
+  - "tetrabromobisphenol a"
+  - "tbba"
+  - "dbdpe"
+  - "brominated flame retardants"
+  - "bfr"
+  - "sodium bromide"
+  - "calcium bromide"
+
+competitors:
+  - name: "Archean Chemical Industries"
+    aliases: ["Archean Chemical", "Archean", "ACI"]
+    country: "India"
+  - name: "Gulf Resources"
+    aliases: ["Gulf Resources Inc", "GURE"]
+    country: "China"
+  - name: "ICL Group"
+    aliases: ["ICL", "Israel Chemicals", "Dead Sea Works"]
+    country: "Israel"
+  - name: "Jordan Bromine Company"
+    aliases: ["Jordan Bromine", "JBC"]
+    country: "Jordan"
+  - name: "Lanxess"
+    aliases: ["Lanxess AG"]
+    country: "Germany"
+  - name: "Tata Chemicals"
+    aliases: ["Tata Chemicals Ltd", "TCL"]
+    country: "India"
+  - name: "Albemarle Corporation"
+    aliases: ["Albemarle", "ALB"]
+    country: "United States"
+  - name: "Tosoh Corporation"
+    aliases: ["Tosoh"]
+    country: "Japan"
+
+geographies:
+  China:
+    keywords: ["China", "Shandong", "Weifang", "Bohai", "Laizhou", "Qingdao", "Tianjin", "Jiangsu", "Sichuan", "Chinese"]
+    is_major_producer: true
+    is_major_consumer: true
+  India:
+    keywords: ["India", "Gujarat", "Kutch", "Rann of Kutch", "Mundra", "Dahej", "Maharashtra", "Indian"]
+    is_major_producer: true
+    is_major_consumer: true
+  Europe:
+    keywords: ["Europe", "EU", "Germany", "United Kingdom", "UK", "Belgium", "France", "Netherlands", "ECHA", "Cefic", "European"]
+    is_major_producer: true
+    is_major_consumer: true
+  United States:
+    keywords: ["United States", "USA", "U.S.", "US", "Arkansas", "Texas", "Louisiana", "ACC", "CSB", "American"]
+    is_major_producer: true
+    is_major_consumer: true
+  Middle East:
+    keywords: ["Middle East", "Israel", "Dead Sea", "Jordan", "Sdom", "Safi", "Red Sea", "Suez"]
+    is_major_producer: true
+    is_major_consumer: false
+  Global:
+    keywords: ["Global", "Worldwide", "International", "Seaborne", "Maritime"]
+    is_major_producer: false
+    is_major_consumer: false
+
+event_categories:
+  PRICE:
+    keywords: ["price", "pricing", "spot price", "contract price", "index", "hike", "cut", "rally", "plunge", "spread", "parity", "rmb/ton", "usd/mt"]
+    default_impact: "HIGH"
+  CAPACITY:
+    keywords: ["capacity", "expansion", "new plant", "debottlenecking", "capex", "capacity addition", "million tons", "ktpa", "mtpa"]
+    default_impact: "HIGH"
+  SUPPLY:
+    keywords: ["supply disruption", "shortage", "brine depletion", "shutdown", "outage", "maintenance", "turnaround", "curtailment", "force majeure", "freeze", "flood"]
+    default_impact: "HIGH"
+  DEMAND:
+    keywords: ["demand", "off-take", "consumption", "flame retardant", "tbba", "electronics", "construction", "automotive", "destocking", "procurement"]
+    default_impact: "MEDIUM"
+  REGULATION:
+    keywords: ["regulation", "restriction", "ban", "compliance", "environmental audit", "inspection", "ministry of ecology", "echa", "reach", "tariff", "anti-dumping", "duty", "subsidies"]
+    default_impact: "HIGH"
+  TRADE:
+    keywords: ["export", "import", "customs", "shipment", "iso tank", "freight", "port", "tariff", "trade flow", "fob", "cif"]
+    default_impact: "MEDIUM"
+  COMPETITOR_MOVE:
+    keywords: ["joint venture", "merger", "acquisition", "earnings", "quarterly result", "investor presentation", "annual report", "financial results", "ceo", "guidance"]
+    default_impact: "MEDIUM"
+  PLANT_EVENT:
+    keywords: ["incident", "leak", "fire", "explosion", "spill", "hazard", "evacuation", "investigation"]
+    default_impact: "CRITICAL"
+  SAFETY_INCIDENT:
+    keywords: ["safety", "csb", "osha", "injury", "fatality", "violation", "fine", "citation"]
+    default_impact: "CRITICAL"
+
+negative_exclusion_keywords:
+  - "bromine sedation"
+  - "bromism"
+  - "potassium bromide canine"
+  - "swimming pool bromine tablets"
+  - "spa sanitizer"
+  - "photographic film silver bromide"
+  - "methyl bromide fumigation agricultural pest"
+  - "quantum bromine spectroscopy"
+  - "organic synthesis crystal structure of bromine derivative"
+  - "novel synthesis of 2-bromo"
+
+relevance_scoring:
+  min_threshold: 0.40
+  high_relevance_threshold: 0.70
+  weights:
+    product_keyword_match: 0.40
+    competitor_match: 0.25
+    event_keyword_match: 0.20
+    chemical_market_context: 0.15

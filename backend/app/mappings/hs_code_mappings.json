@@ -1,0 +1,32 @@
+{
+  "280130": {
+    "description": "Bromine",
+    "product": "Bromine",
+    "chapter": "28"
+  },
+  "28013020": {
+    "description": "Liquid Bromine / Elemental Bromine",
+    "product": "Bromine",
+    "chapter": "28"
+  },
+  "28013010": {
+    "description": "Bromine other than liquid",
+    "product": "Bromine",
+    "chapter": "28"
+  },
+  "281119": {
+    "description": "Hydrobromic Acid (HBr)",
+    "product": "Hydrobromic Acid",
+    "chapter": "28"
+  },
+  "282751": {
+    "description": "Bromides of sodium or of potassium",
+    "product": "Sodium Bromide",
+    "chapter": "28"
+  },
+  "282759": {
+    "description": "Other bromides and bromide oxides",
+    "product": "Bromine Derivatives",
+    "chapter": "28"
+  }
+}

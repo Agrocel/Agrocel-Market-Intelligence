@@ -1,0 +1,20 @@
+{
+  "OFFICIAL_FILING": "A",
+  "REGULATORY_NOTIFICATION": "A",
+  "EXCHANGE_DISCLOSURE": "A",
+  "CUSTOMS_DATA": "A",
+  "PAID_MARKET_REPORT": "B",
+  "RICHARD_REPORT": "B",
+  "VERIFIED_SUPPLIER_DATA": "B",
+  "BROKER_REPORT": "C",
+  "FIELD_INTERVIEW": "C",
+  "PRESS_ARTICLE": "C",
+  "MARKET_RUMOUR": "D",
+  "HEARSAY": "D",
+  "grade_definitions": {
+    "A": "Trusted / Confirmed — From official filing, regulatory source, or directly verified customs data",
+    "B": "Reliable — Approved paid market report (Richard report), reputable data provider, trusted trade track record",
+    "C": "Unverified — Plausible single unverified article, field talk, or trade gossip requiring corroboration",
+    "D": "Rumour — Market rumour or hearsay, logged for pattern detection but clearly flagged"
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "trade_impex": {
+    "date": ["DATE", "SBDATE", "SBDATE "],
+    "hs_code": ["HS CODE", "HS_CODE", "HSN"],
+    "product_desc": ["PRODUCT DESCRIPTION", "PRODUCT_DESCRIPTION", "HSN Desc."],
+    "quantity": ["QUANTITY", "Qty(Kgs)", "QTY."],
+    "unit": ["UNIT"],
+    "value_usd": ["CIF VALUE (USD)", "FOB VALUE (USD)"],
+    "value_inr": ["FOB VALUE (INR)", "Assess Val."],
+    "unit_price_usd": ["UNIT PRICE (USD)"],
+    "exchange_rate": ["EXCHANGE RATE(USD)", "INR Rate"],
+    "country": ["COUNTRY", "COUNTRY OF ORIGIN", "DESTINATION COUNTRY", "To Place & Pin"],
+    "party_name": ["IMPORTER NAME", "EXPORTER NAME", "Supplier Name", "Customer's Name"]
+  },
+  "china_price": {
+    "date": ["Date"],
+    "price_usd_kg": ["Price USD (Kg)"],
+    "price_rmb_kg": ["Price RMB (KG)"],
+    "price_inr_kg": ["Price  INR (Kg)"],
+    "inr_rate": ["INR Rate"],
+    "commodity": ["Commodity"],
+    "sectors": ["Sectors"]
+  },
+  "sales": {
+    "invoice_no": ["INV. NO.", "Invoice No"],
+    "date": ["DATE", "Invoice Dt"],
+    "customer": ["BUYER", "Sold-To-Party Name", "Ship-To-Party Name"],
+    "product": ["PRODUCT", "Mat. Desc."],
+    "quantity": ["QTY.", "Inv Qty."],
+    "unit": ["Inv Qty UOM."],
+    "rate": ["RATE"]
+  }
+}

@@ -1,0 +1,157 @@
+# Approved News, RSS, and Official Sources Registry
+# Configurable source definitions with reliability grading and automated fetch controls.
+
+sources:
+  - source_name: "GDELT Global News Discovery"
+    source_type: "GDELT"
+    base_url: "https://api.gdeltproject.org/api/v2/doc/doc"
+    feed_url: null
+    publisher_region: "Global"
+    default_reliability_grade: "B"
+    allowed_for_automated_fetch: true
+    active: true
+    fetch_frequency_minutes: 180
+    notes: "Primary global news discovery engine via GDELT DOC 2.0 API. Combines product and event queries."
+
+  - source_name: "Chemistry World (RSC)"
+    source_type: "RSS"
+    base_url: "https://www.chemistryworld.com"
+    feed_url: "https://www.chemistryworld.com/rss"
+    publisher_region: "Europe"
+    default_reliability_grade: "B"
+    allowed_for_automated_fetch: true
+    active: true
+    fetch_frequency_minutes: 180
+    notes: "Royal Society of Chemistry news portal covering global chemical industry and policy."
+
+  - source_name: "C&EN (Chemical & Engineering News)"
+    source_type: "RSS"
+    base_url: "https://cen.acs.org"
+    feed_url: "https://cen.acs.org/feeds/rss/index.rss"
+    publisher_region: "United States"
+    default_reliability_grade: "B"
+    allowed_for_automated_fetch: true
+    active: true
+    fetch_frequency_minutes: 180
+    notes: "American Chemical Society news publication covering business, policy, and manufacturing."
+
+  - source_name: "Economic Times Chemical News"
+    source_type: "RSS"
+    base_url: "https://economictimes.indiatimes.com"
+    feed_url: "https://economictimes.indiatimes.com/industry/indl-goods/svs/chem-petrochem/rssfeeds/13358319.cms"
+    publisher_region: "India"
+    default_reliability_grade: "B"
+    allowed_for_automated_fetch: true
+    active: true
+    fetch_frequency_minutes: 180
+    notes: "India premier financial daily section on chemicals, petrochemicals, and trade."
+
+  - source_name: "Chemical Weekly (India)"
+    source_type: "RSS"
+    base_url: "https://www.chemicalweekly.com"
+    feed_url: "https://www.chemicalweekly.com/rss/news.xml"
+    publisher_region: "India"
+    default_reliability_grade: "B"
+    allowed_for_automated_fetch: true
+    active: true
+    fetch_frequency_minutes: 360
+    notes: "India chemical industry weekly trade journal with coverage of Dahej, Kutch, and western ports."
+
+  - source_name: "SunSirs (100ppi) China Bromine Portal"
+    source_type: "OFFICIAL_WEBSITE"
+    base_url: "https://www.sunsirs.com"
+    feed_url: "https://www.sunsirs.com/uk/prodetail-643.html"
+    publisher_region: "China"
+    default_reliability_grade: "A"
+    allowed_for_automated_fetch: true
+    active: true
+    fetch_frequency_minutes: 180
+    notes: "Authoritative Chinese commodity benchmark index and Shandong merchant bromine market reports."
+
+  - source_name: "ChemNet News China"
+    source_type: "RSS"
+    base_url: "http://news.chemnet.com"
+    feed_url: "http://news.chemnet.com/rss/chemnet_news_en.xml"
+    publisher_region: "China"
+    default_reliability_grade: "B"
+    allowed_for_automated_fetch: true
+    active: true
+    fetch_frequency_minutes: 240
+    notes: "China chemical industry news, plant turnarounds, and export quota updates."
+
+  - source_name: "Cefic (European Chemical Industry Council)"
+    source_type: "OFFICIAL_WEBSITE"
+    base_url: "https://cefic.org"
+    feed_url: "https://cefic.org/media-corner/newsroom/feed/"
+    publisher_region: "Europe"
+    default_reliability_grade: "A"
+    allowed_for_automated_fetch: true
+    active: true
+    fetch_frequency_minutes: 360
+    notes: "Official voice of the chemical industry in Europe covering energy policy and Reach regulation."
+
+  - source_name: "ECHA (European Chemicals Agency)"
+    source_type: "OFFICIAL_WEBSITE"
+    base_url: "https://echa.europa.eu"
+    feed_url: "https://echa.europa.eu/news-and-events/news/rss"
+    publisher_region: "Europe"
+    default_reliability_grade: "A"
+    allowed_for_automated_fetch: true
+    active: true
+    fetch_frequency_minutes: 360
+    notes: "EU regulatory authority for chemical safety, flame retardant restrictions, and substance evaluations."
+
+  - source_name: "American Chemistry Council (ACC)"
+    source_type: "OFFICIAL_WEBSITE"
+    base_url: "https://www.americanchemistry.com"
+    feed_url: "https://www.americanchemistry.com/chemistry-in-america/news-trends/press-release/rss"
+    publisher_region: "United States"
+    default_reliability_grade: "A"
+    allowed_for_automated_fetch: true
+    active: true
+    fetch_frequency_minutes: 360
+    notes: "US industry trade association representing North American chemical manufacturers."
+
+  - source_name: "US Chemical Safety Board (CSB)"
+    source_type: "OFFICIAL_WEBSITE"
+    base_url: "https://www.csb.gov"
+    feed_url: "https://www.csb.gov/rss/news/"
+    publisher_region: "United States"
+    default_reliability_grade: "A"
+    allowed_for_automated_fetch: true
+    active: true
+    fetch_frequency_minutes: 720
+    notes: "Independent US federal agency investigating industrial chemical accidents and hazards."
+
+  - source_name: "Archean Chemical Press & Disclosures"
+    source_type: "OFFICIAL_WEBSITE"
+    base_url: "https://archeanchemical.com"
+    feed_url: null
+    publisher_region: "India"
+    default_reliability_grade: "A"
+    allowed_for_automated_fetch: true
+    active: true
+    fetch_frequency_minutes: 360
+    notes: "Key Indian domestic competitor in Kutch. Regulatory filings and capacity disclosures."
+
+  - source_name: "ICL Group Press Releases & IR"
+    source_type: "OFFICIAL_WEBSITE"
+    base_url: "https://www.icl-group.com"
+    feed_url: "https://www.icl-group.com/feed/"
+    publisher_region: "Middle East"
+    default_reliability_grade: "A"
+    allowed_for_automated_fetch: true
+    active: true
+    fetch_frequency_minutes: 360
+    notes: "Global market leader in elemental bromine and derivatives from the Dead Sea."
+
+  - source_name: "Gulf Resources Investor Relations"
+    source_type: "OFFICIAL_WEBSITE"
+    base_url: "http://www.gulfresourcesinc.cn"
+    feed_url: null
+    publisher_region: "China"
+    default_reliability_grade: "A"
+    allowed_for_automated_fetch: true
+    active: true
+    fetch_frequency_minutes: 720
+    notes: "SEC-reporting producer of bromine and crude salt in Shandong Province, China."

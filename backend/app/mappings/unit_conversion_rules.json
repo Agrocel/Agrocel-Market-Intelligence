@@ -1,0 +1,21 @@
+{
+  "unit_to_mt_multiplier": {
+    "MT": 1.0,
+    "TON": 1.0,
+    "TONS": 1.0,
+    "TONNE": 1.0,
+    "TONNES": 1.0,
+    "MTS": 1.0,
+    "KGS": 0.001,
+    "KG": 0.001,
+    "KILOGRAM": 0.001,
+    "KILOGRAMS": 0.001,
+    "LBS": 0.000453592,
+    "POUNDS": 0.000453592
+  },
+  "default_quantity_unit": "MT",
+  "price_unit_rules": {
+    "PER_KG_TO_PER_MT_MULTIPLIER": 1000.0,
+    "PER_MT_TO_PER_KG_MULTIPLIER": 0.001
+  }
+}
