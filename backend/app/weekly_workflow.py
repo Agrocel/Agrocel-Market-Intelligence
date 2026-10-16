@@ -48,8 +48,12 @@ def run_weekly_intelligence_workflow(
 
     return synthesize_executive_brief(db, brief_type="WEEKLY", end_date=period_end)
 
-def format_brief_response(brief: ExecutiveBrief) -> Dict[str, Any]:
+def format_brief_response(brief: ExecutiveBrief, db: Optional[Session] = None) -> Dict[str, Any]:
     """Formats an ExecutiveBrief entity with its sections and citations into a clean JSON response."""
+    if not db:
+        from sqlalchemy.orm import object_session
+        db = object_session(brief)
+
     sections_out = []
     for sec in sorted(brief.sections, key=lambda s: s.display_order):
         try:
@@ -91,6 +95,23 @@ def format_brief_response(brief: ExecutiveBrief) -> Dict[str, Any]:
                 "full_text": brief.market_narrative,
                 "who_did_what": []
             }
+
+    # Ensure Top 5 competitor signals with quotes & forward commentary are enriched into who_did_what
+    if parsed_narrative and isinstance(parsed_narrative, dict):
+        current_actors = parsed_narrative.get("who_did_what", [])
+        has_rich_competitors = any(
+            (a.get("category") == "Competitors" or a.get("quote"))
+            for a in current_actors
+        )
+        if not has_rich_competitors and db:
+            from .ai.executive_brief_engine import extract_competitor_actor_items
+            comp_items = extract_competitor_actor_items(db, limit=10)
+            if comp_items:
+                filtered = [
+                    a for a in current_actors
+                    if not any(k in a.get("entity", "").lower() for k in ["archean chemical", "icl group", "albemarle"])
+                ]
+                parsed_narrative["who_did_what"] = comp_items + filtered
 
     if not grounding_out:
         for s in sections_out:
@@ -320,7 +341,7 @@ def get_latest_executive_brief(db: Session, product_code: str = "BR2") -> Option
         # Generate initial baseline snapshot if none exists
         brief = run_weekly_intelligence_workflow(db, force_regenerate=True)
 
-    return format_brief_response(brief)
+    return format_brief_response(brief, db=db)
 
 def get_executive_brief_by_id(db: Session, brief_id: int) -> Optional[Dict[str, Any]]:
     """Retrieves a specific historical executive brief snapshot by ID."""
@@ -332,7 +353,7 @@ def get_executive_brief_by_id(db: Session, brief_id: int) -> Optional[Dict[str, 
 
     if not brief:
         return None
-    return format_brief_response(brief)
+    return format_brief_response(brief, db=db)
 
 def get_executive_brief_history(db: Session, product_code: str = "BR2", limit: int = 20) -> List[Dict[str, Any]]:
     """Retrieves metadata for historical weekly executive brief snapshots."""

@@ -13,12 +13,14 @@ from .models import (
     Product, Geography, Competitor, MarketPrice, TradeRecord,
     SalesRecord, SourceDocument, DocumentChunk, IntelligenceItem,
     ManualIntelligenceEntry, CompetitorStockPrice, IngestionRun, IngestionError,
-    NewsSource, NewsArticle, NewsIntelligence, NewsIngestionRun
+    NewsSource, NewsArticle, NewsIntelligence, NewsIngestionRun,
+    CompetitorReport, CompetitorExtractedMetric, CompetitorStrategicFinding
 )
 from .services import (
     overview, parse_date_opt, get_data_sources_summary,
     get_latest_common_month_range, get_latest_common_date
 )
+from .overview_engine import get_complete_overview
 from .retrieval.hybrid_retriever import hybrid_chat_answer
 from .cleaning.ingest_documents import ingest_single_document
 from .vector.qdrant_store import get_qdrant_store
@@ -49,6 +51,13 @@ app.add_middleware(
 def boot():
     Base.metadata.create_all(engine)
     try:
+        from .competitor_intelligence_seed import seed_competitor_intelligence
+        from .database import SessionLocal
+        with SessionLocal() as db:
+            seed_competitor_intelligence(db)
+    except Exception as e:
+        print(f"[STARTUP] Could not seed competitor intelligence: {e}")
+    try:
         news_scheduler.start()
     except Exception as e:
         print(f"[STARTUP] Could not start news scheduler: {e}")
@@ -68,11 +77,55 @@ def health():
 def dashboard(
     start: Optional[str] = Query(None, description="Start date YYYY-MM-DD"),
     end: Optional[str] = Query(None, description="End date YYYY-MM-DD"),
+    frequency: str = Query("monthly", description="Frequency for benchmarks and trade: monthly, quarterly, yearly"),
     db: Session = Depends(get_db)
 ):
-    return overview(db, start=start, end=end)
+    base_data = overview(db, start=start, end=end)
+    base_data["executive_overview"] = get_complete_overview(db, frequency=frequency)
+    return base_data
+
+@app.get("/api/dashboard/overview-complete")
+def overview_complete(
+    frequency: str = Query("monthly", description="Aggregation frequency: monthly, quarterly, yearly"),
+    db: Session = Depends(get_db)
+):
+    """
+    Returns the complete 9-section Bromine Executive Overview in the exact finalized sequence:
+    Price Benchmarks -> Supply -> Demand -> Trade -> Production -> Plant Outages ->
+    Competitors' Reports -> Forecasts -> News, preceded by the Executive Market Snapshot.
+    """
+    return get_complete_overview(db, frequency=frequency)
+
+@app.get("/api/supply/intelligence")
+def supply_intelligence(
+    db: Session = Depends(get_db)
+):
+    """
+    Returns executive-level Section 02 Supply & Global Capacity intelligence:
+    - Executive supply summary & key KPIs
+    - Latest 3-layer supply news developments
+    - Global capacity distribution (Nameplate vs Actual Production & Concentration)
+    - 5 country intelligence cards with expandable operational details
+    - Regional supply condition dynamics
+    - Evidence-backed 'What Changed Since Last Update?' comparisons
+    - Agrocel business implications
+    """
+    from .supply_engine import get_enhanced_supply_intelligence
+    return get_enhanced_supply_intelligence(db)
+
+@app.post("/api/supply/refresh")
+def supply_intelligence_refresh(
+    db: Session = Depends(get_db)
+):
+    """
+    Busts the supply AI intelligence cache and forces regeneration of
+    management summaries and latest supply intelligence assessments.
+    """
+    from .supply_engine import get_enhanced_supply_intelligence
+    return get_enhanced_supply_intelligence(db, force_refresh=True)
 
 @app.get("/api/data-sources/summary")
+
 def data_sources_summary(db: Session = Depends(get_db)):
     """Returns complete data range, origin metadata, and news provenance for all sources."""
     return get_data_sources_summary(db)
@@ -320,6 +373,167 @@ def competitor_stocks(
         } for x in rows
     ]
 
+@app.get("/api/competitors/dossiers")
+def competitor_dossiers(db: Session = Depends(get_db)):
+    """Returns top 5 competitors with summary scorecard and dossier overview."""
+    comps = db.scalars(select(Competitor).where(Competitor.active == True).order_by(Competitor.id.asc())).all()
+    out = []
+    for c in comps:
+        reports = db.scalars(
+            select(CompetitorReport)
+            .where(CompetitorReport.competitor_id == c.id)
+            .order_by(CompetitorReport.filing_date.desc())
+        ).all()
+        metrics = db.scalars(
+            select(CompetitorExtractedMetric)
+            .where(CompetitorExtractedMetric.competitor_id == c.id)
+            .order_by(CompetitorExtractedMetric.period_date.asc())
+        ).all()
+        findings = db.scalars(
+            select(CompetitorStrategicFinding)
+            .where(CompetitorStrategicFinding.competitor_id == c.id)
+            .order_by(CompetitorStrategicFinding.id.desc())
+        ).all()
+        
+        latest_q = [m for m in metrics if not m.is_annual]
+        latest_quarterly = latest_q[-1] if latest_q else (metrics[-1] if metrics else None)
+        
+        out.append({
+            "id": c.id,
+            "name": c.name,
+            "country": c.country,
+            "ticker": c.stock_ticker,
+            "website": c.website,
+            "reports_count": len(reports),
+            "latest_filing": {
+                "title": reports[0].title,
+                "date": str(reports[0].filing_date),
+                "type": reports[0].report_type,
+                "period": reports[0].fiscal_period,
+                "authority": reports[0].filing_authority
+            } if reports else None,
+            "scorecard": {
+                "latest_revenue_usd_m": latest_quarterly.segment_revenue_usd_m if latest_quarterly else None,
+                "latest_volume_mt": latest_quarterly.sales_volume_mt if latest_quarterly else None,
+                "latest_ebitda_usd_m": latest_quarterly.segment_ebitda_usd_m if latest_quarterly else None,
+                "latest_margin_pct": latest_quarterly.ebitda_margin_pct if latest_quarterly else None,
+                "latest_price_per_mt": latest_quarterly.realized_price_per_mt if latest_quarterly else None,
+                "latest_utilization_pct": latest_quarterly.capacity_utilization_pct if latest_quarterly else None,
+                "period": latest_quarterly.fiscal_period if latest_quarterly else None
+            },
+            "strategic_pulse": findings[0].headline if findings else "Continuous operational monitoring",
+            "findings_count": len(findings)
+        })
+    # Prioritize top public peers with reports
+    out.sort(key=lambda x: (x["reports_count"] > 0, x["ticker"] is not None), reverse=True)
+    return out
+
+@app.get("/api/competitors/{competitor_id}/dossier")
+def competitor_dossier_detail(competitor_id: int, db: Session = Depends(get_db)):
+    """Returns complete dossier for a competitor, including report library, 4-chart metrics, and transcript quotes."""
+    comp = db.get(Competitor, competitor_id)
+    if not comp:
+        raise HTTPException(status_code=404, detail="Competitor not found")
+        
+    reports = db.scalars(
+        select(CompetitorReport)
+        .where(CompetitorReport.competitor_id == competitor_id)
+        .order_by(CompetitorReport.filing_date.desc())
+    ).all()
+    
+    metrics = db.scalars(
+        select(CompetitorExtractedMetric)
+        .where(CompetitorExtractedMetric.competitor_id == competitor_id)
+        .order_by(CompetitorExtractedMetric.period_date.asc())
+    ).all()
+    
+    findings = db.scalars(
+        select(CompetitorStrategicFinding)
+        .where(CompetitorStrategicFinding.competitor_id == competitor_id)
+        .order_by(CompetitorStrategicFinding.id.desc())
+    ).all()
+
+    return {
+        "competitor": {
+            "id": comp.id,
+            "name": comp.name,
+            "country": comp.country,
+            "ticker": comp.stock_ticker,
+            "website": comp.website
+        },
+        "reports": [
+            {
+                "id": r.id,
+                "title": r.title,
+                "report_type": r.report_type,
+                "fiscal_period": r.fiscal_period,
+                "filing_date": str(r.filing_date),
+                "filing_authority": r.filing_authority,
+                "source_url": r.source_url,
+                "highlights": r.executive_highlights,
+                "key_topics": r.key_topics,
+                "document_summary": r.document_summary
+            } for r in reports
+        ],
+        "metrics": [
+            {
+                "id": m.id,
+                "period": m.fiscal_period,
+                "date": str(m.period_date),
+                "is_annual": m.is_annual,
+                "segment_name": m.segment_name,
+                "currency": m.currency,
+                "revenue_usd_m": m.segment_revenue_usd_m,
+                "volume_mt": m.sales_volume_mt,
+                "ebitda_usd_m": m.segment_ebitda_usd_m,
+                "ebitda_margin_pct": m.ebitda_margin_pct,
+                "realized_price_per_mt": m.realized_price_per_mt,
+                "capacity_utilization_pct": m.capacity_utilization_pct
+            } for m in metrics
+        ],
+        "findings": [
+            {
+                "id": f.id,
+                "period": f.fiscal_period,
+                "category": f.category,
+                "headline": f.headline,
+                "summary": f.summary,
+                "transcript_quote": f.transcript_quote,
+                "speaker": f.speaker,
+                "sentiment": f.sentiment,
+                "agrocel_takeaway": f.agrocel_takeaway
+            } for f in findings
+        ]
+    }
+
+@app.get("/api/competitors/pulse")
+def competitor_pulse(db: Session = Depends(get_db)):
+    """Returns top peer strategic moves, transcript quotes, and pricing signals for the Overview page."""
+    findings = db.scalars(
+        select(CompetitorStrategicFinding)
+        .order_by(CompetitorStrategicFinding.id.desc())
+        .limit(6)
+    ).all()
+    
+    out = []
+    for f in findings:
+        comp = f.competitor
+        out.append({
+            "id": f.id,
+            "competitor_id": comp.id if comp else None,
+            "competitor_name": comp.name if comp else "Peer Group",
+            "ticker": comp.stock_ticker if comp else None,
+            "period": f.fiscal_period,
+            "category": f.category,
+            "headline": f.headline,
+            "summary": f.summary,
+            "transcript_quote": f.transcript_quote,
+            "speaker": f.speaker,
+            "sentiment": f.sentiment,
+            "agrocel_takeaway": f.agrocel_takeaway
+        })
+    return out
+
 @app.get("/api/intelligence-items")
 def intelligence_items(
     impact: Optional[str] = None,
@@ -488,7 +702,7 @@ def executive_brief_by_id(brief_id: int, db: Session = Depends(get_db)):
 def generate_weekly_brief(payload: GenerateWeeklyRequest = GenerateWeeklyRequest(), db: Session = Depends(get_db)):
     p_end = parse_date_opt(payload.period_end)
     brief = run_weekly_intelligence_workflow(db, period_end=p_end, force_regenerate=payload.force)
-    return format_brief_response(brief)
+    return format_brief_response(brief, db=db)
 
 @app.get("/api/executive-briefs/{brief_id}/citations")
 def executive_brief_citations(brief_id: int, db: Session = Depends(get_db)):

@@ -4,7 +4,11 @@ import { EmptyState, ReliabilityBadge } from './Common';
 import { DataGroundedText, ProvenanceDrawer } from './DataProvenance';
 
 const classify = (actor: WhoDidWhatItem) => {
+  if (actor.category && ['Competitors', 'Supply', 'Demand', 'Policy', 'Commercial'].includes(actor.category)) {
+    return actor.category;
+  }
   const text = `${actor.entity} ${actor.role} ${actor.action} ${actor.impact}`.toLowerCase();
+  if (/albemarle|icl|archean|lanxess|gulf resources|competitor|peer/.test(text)) return 'Competitors';
   if (/regulat|ministry|authority|compliance|environment/.test(text)) return 'Policy';
   if (/buyer|consumer|downstream|demand|compound/.test(text)) return 'Demand';
   if (/agrocel|commercial|sales|customer/.test(text)) return 'Commercial';
@@ -28,7 +32,7 @@ export function MarketNarrative({ brief }: { brief?: ExecutiveBrief | null }) {
 
   const narrative = brief?.market_narrative;
   const actors = narrative?.who_did_what || [];
-  const categories = ['All', 'Supply', 'Demand', 'Policy', 'Commercial'];
+  const categories = ['All', 'Competitors', 'Supply', 'Demand', 'Policy', 'Commercial'];
   const visible = actors.filter(a => filter === 'All' || classify(a) === filter);
 
   // Informative limit: show top 5 by default, with toggle
@@ -280,6 +284,7 @@ export function MarketNarrative({ brief }: { brief?: ExecutiveBrief | null }) {
             ))}
           </div>
           <div className="signal-legend">
+            <span><i className="competitors-dot" />Competitors (Peers)</span>
             <span><i className="supply-dot" />Producers (Supply)</span>
             <span><i className="demand-dot" />Buyers (Demand)</span>
             <span><i className="policy-dot" />Regulations</span>
@@ -322,11 +327,26 @@ export function MarketNarrative({ brief }: { brief?: ExecutiveBrief | null }) {
                       <h4 className="actor-entity-name">{a.entity}</h4>
                       <span className="actor-role-badge">{a.role}</span>
                       <span className={`actor-category-tag tag-${category.toLowerCase()}`}>{category}</span>
+                      {a.sentiment && (
+                        <span className={`actor-sentiment-badge sentiment-${a.sentiment.toLowerCase()}`}>
+                          {a.sentiment}
+                        </span>
+                      )}
                     </div>
                     <ReliabilityBadge grade={a.reliability_grade} />
                   </div>
 
                   <div className="actor-card-details">
+                    {a.quote && (
+                      <div className="actor-quote-box">
+                        <span className="quote-icon">“</span>
+                        <div className="quote-body">
+                          <p className="quote-text">{a.quote}</p>
+                          {a.speaker && <span className="quote-speaker">— {a.speaker}</span>}
+                        </div>
+                      </div>
+                    )}
+
                     <div className="actor-action-block">
                       <span className="detail-heading action-heading">Action Observed</span>
                       <p className="detail-paragraph">{a.action}</p>

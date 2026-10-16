@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   CartesianGrid,
   ComposedChart,
@@ -80,7 +80,42 @@ export const FORECAST_PREDICTIONS = [
 ];
 
 export function IndiaPriceForecastSection() {
+  const [viewMode, setViewMode] = useState<'month' | 'year'>('month');
   const chartData = useMemo(() => FORECAST_CHART_DATA, []);
+
+  // Whole multi-year trend (e.g. 2022, 2023, 2024, 2025, 2026)
+  const yearlyForecastData = useMemo(() => {
+    const map = new Map<string, { actuals: number[]; forecasts: number[] }>();
+
+    FORECAST_CHART_DATA.forEach(d => {
+      const year = d.date.slice(0, 4);
+      if (!map.has(year)) {
+        map.set(year, { actuals: [], forecasts: [] });
+      }
+      const entry = map.get(year)!;
+      if (d.avg_unit_value !== null) entry.actuals.push(d.avg_unit_value);
+      if (d.predicted_price !== null) entry.forecasts.push(d.predicted_price);
+    });
+
+    const sortedYears = Array.from(map.keys()).sort();
+    return sortedYears.map(year => {
+      const entry = map.get(year)!;
+      const actualAvg =
+        entry.actuals.length > 0
+          ? Number((entry.actuals.reduce((a, b) => a + b, 0) / entry.actuals.length).toFixed(2))
+          : null;
+      const forecastAvg =
+        entry.forecasts.length > 0
+          ? Number((entry.forecasts.reduce((a, b) => a + b, 0) / entry.forecasts.length).toFixed(2))
+          : null;
+
+      return {
+        year,
+        avg_unit_value: actualAvg,
+        predicted_price: year === '2025' ? actualAvg : forecastAvg
+      };
+    });
+  }, []);
 
   return (
     <article className="forecast-model-card">
@@ -159,97 +194,203 @@ export function IndiaPriceForecastSection() {
         {/* Right Chart: Historical & Forecasted Price Trend */}
         <div className="forecast-chart-panel">
           <div className="chart-panel-meta">
-            <span className="chart-stat-chip">
-              Latest Historical: <b>$3.02 USD/kg</b> (Feb 2026)
-            </span>
-            <span className="chart-stat-chip highlight">
-              May 2026 Forecast: <b>$3.04 USD/kg</b>
-            </span>
+            <div className="chart-horizon-toggle" role="group" aria-label="Forecast Horizon View">
+              <button
+                type="button"
+                className={`chart-horizon-btn ${viewMode === 'month' ? 'active' : ''}`}
+                onClick={() => setViewMode('month')}
+              >
+                Month
+              </button>
+              <button
+                type="button"
+                className={`chart-horizon-btn ${viewMode === 'year' ? 'active' : ''}`}
+                onClick={() => setViewMode('year')}
+              >
+                Year
+              </button>
+            </div>
+
+            <div className="chart-stat-chips-group">
+              {viewMode === 'year' ? (
+                <>
+                  <span className="chart-stat-chip">
+                    2026 YTD Avg: <b>$3.10 USD/kg</b>
+                  </span>
+                  <span className="chart-stat-chip highlight">
+                    2026 Forecast Target: <b>$3.03 USD/kg</b>
+                  </span>
+                </>
+              ) : (
+                <>
+                  <span className="chart-stat-chip">
+                    Latest Historical: <b>$3.02 USD/kg</b> (Feb 2026)
+                  </span>
+                  <span className="chart-stat-chip highlight">
+                    May 2026 Forecast: <b>$3.04 USD/kg</b>
+                  </span>
+                </>
+              )}
+            </div>
           </div>
 
           <div className="forecast-chart-wrap" role="img" aria-label="Historical and Forecasted Price Trend Chart">
             <ResponsiveContainer width="100%" height={330}>
-              <ComposedChart
-                data={chartData}
-                margin={{ top: 18, right: 18, left: -8, bottom: 4 }}
-              >
-                <CartesianGrid stroke="#e4eae7" vertical={false} strokeDasharray="3 3" />
-                <XAxis
-                  dataKey="monthLabel"
-                  tick={{ fontSize: 10, fill: '#64748b' }}
-                  minTickGap={22}
-                  axisLine={{ stroke: '#cbd5e1' }}
-                  tickLine={false}
-                />
-                <YAxis
-                  domain={[2.0, 7.2]}
-                  ticks={[2.0, 3.0, 4.0, 5.0, 6.0, 7.0]}
-                  tickFormatter={(v) => `$${v}`}
-                  tick={{ fontSize: 10, fill: '#64748b' }}
-                  axisLine={{ stroke: '#cbd5e1' }}
-                  tickLine={false}
-                  width={42}
-                />
-                <Tooltip
-                  formatter={(val: any, name: any) => [
-                    `$${Number(val).toFixed(2)} USD / kg`,
-                    name === 'avg_unit_value' ? 'Avg Unit Value USD' : 'Predicted Price'
-                  ]}
-                  labelFormatter={(_label: any, payload: any) => {
-                    const pt = payload?.[0]?.payload;
-                    return pt?.displayDate || `Observation: ${pt?.monthLabel || _label}`;
-                  }}
-                  contentStyle={{
-                    backgroundColor: '#ffffff',
-                    border: '1px solid #cbd5e1',
-                    borderRadius: 8,
-                    boxShadow: '0 8px 24px rgba(15, 23, 42, 0.08)',
-                    fontSize: 12
-                  }}
-                />
-                <Legend
-                  wrapperStyle={{ fontSize: 11, paddingTop: 8 }}
-                  formatter={(value) => (value === 'avg_unit_value' ? 'Avg Unit Value USD' : 'Predicted Price')}
-                />
-                
-                {/* Historical Benchmark Reference Lines */}
-                <ReferenceLine
-                  y={6.64}
-                  stroke="#b91c1c"
-                  strokeDasharray="3 3"
-                  label={{ value: 'Peak $6.64 (Jun 2024)', position: 'top', fill: '#b91c1c', fontSize: 10, fontWeight: 700 }}
-                />
-                <ReferenceLine
-                  y={2.30}
-                  stroke="#0f766e"
-                  strokeDasharray="3 3"
-                  label={{ value: 'Trough $2.30 (Jul 2025)', position: 'bottom', fill: '#0f766e', fontSize: 10, fontWeight: 700 }}
-                />
+              {viewMode === 'year' ? (
+                <ComposedChart
+                  data={yearlyForecastData}
+                  margin={{ top: 18, right: 18, left: -8, bottom: 4 }}
+                >
+                  <CartesianGrid stroke="#e4eae7" vertical={false} strokeDasharray="3 3" />
+                  <XAxis
+                    dataKey="year"
+                    tick={{ fontSize: 11, fill: '#64748b' }}
+                    axisLine={{ stroke: '#cbd5e1' }}
+                    tickLine={false}
+                  />
+                  <YAxis
+                    domain={[2.0, 7.2]}
+                    ticks={[2.0, 3.0, 4.0, 5.0, 6.0, 7.0]}
+                    tickFormatter={(v) => `$${v}`}
+                    tick={{ fontSize: 10, fill: '#64748b' }}
+                    axisLine={{ stroke: '#cbd5e1' }}
+                    tickLine={false}
+                    width={42}
+                  />
+                  <Tooltip
+                    formatter={(val: any, name: any) => [
+                      `$${Number(val).toFixed(2)} USD/kg`,
+                      name === 'avg_unit_value' ? 'Historical Annual Avg' : 'Forecast Target'
+                    ]}
+                    labelFormatter={(label) => `Year: ${label}`}
+                    contentStyle={{
+                      backgroundColor: '#ffffff',
+                      border: '1px solid #cbd5e1',
+                      borderRadius: 8,
+                      boxShadow: '0 8px 24px rgba(15, 23, 42, 0.08)',
+                      fontSize: 12
+                    }}
+                  />
+                  <Legend
+                    wrapperStyle={{ fontSize: 11, paddingTop: 8 }}
+                    formatter={(value) => (value === 'avg_unit_value' ? 'Historical Annual Avg' : 'Forecast Target')}
+                  />
+                  <ReferenceLine
+                    y={5.67}
+                    stroke="#b91c1c"
+                    strokeDasharray="3 3"
+                    label={{ value: '2024 Peak Avg ($5.67)', position: 'top', fill: '#b91c1c', fontSize: 10, fontWeight: 700 }}
+                  />
+                  <ReferenceLine
+                    y={3.09}
+                    stroke="#0f766e"
+                    strokeDasharray="3 3"
+                    label={{ value: '2025 Floor Avg ($3.09)', position: 'bottom', fill: '#0f766e', fontSize: 10, fontWeight: 700 }}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="avg_unit_value"
+                    name="avg_unit_value"
+                    stroke="#0284c7"
+                    strokeWidth={2.6}
+                    dot={{ r: 4.5, fill: '#0284c7', strokeWidth: 1.5 }}
+                    activeDot={{ r: 6, strokeWidth: 2, fill: '#ffffff' }}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="predicted_price"
+                    name="predicted_price"
+                    stroke="#dc2626"
+                    strokeWidth={2.8}
+                    strokeDasharray="4 4"
+                    dot={{ r: 5, fill: '#dc2626', stroke: '#ffffff', strokeWidth: 2 }}
+                    activeDot={{ r: 7, strokeWidth: 2, fill: '#ffffff' }}
+                    connectNulls={true}
+                  />
+                </ComposedChart>
+              ) : (
+                <ComposedChart
+                  data={chartData}
+                  margin={{ top: 18, right: 18, left: -8, bottom: 4 }}
+                >
+                  <CartesianGrid stroke="#e4eae7" vertical={false} strokeDasharray="3 3" />
+                  <XAxis
+                    dataKey="monthLabel"
+                    tick={{ fontSize: 10, fill: '#64748b' }}
+                    minTickGap={22}
+                    axisLine={{ stroke: '#cbd5e1' }}
+                    tickLine={false}
+                  />
+                  <YAxis
+                    domain={[2.0, 7.2]}
+                    ticks={[2.0, 3.0, 4.0, 5.0, 6.0, 7.0]}
+                    tickFormatter={(v) => `$${v}`}
+                    tick={{ fontSize: 10, fill: '#64748b' }}
+                    axisLine={{ stroke: '#cbd5e1' }}
+                    tickLine={false}
+                    width={42}
+                  />
+                  <Tooltip
+                    formatter={(val: any, name: any) => [
+                      `$${Number(val).toFixed(2)} USD / kg`,
+                      name === 'avg_unit_value' ? 'Avg Unit Value USD' : 'Predicted Price'
+                    ]}
+                    labelFormatter={(_label: any, payload: any) => {
+                      const pt = payload?.[0]?.payload;
+                      return pt?.displayDate || `Observation: ${pt?.monthLabel || _label}`;
+                    }}
+                    contentStyle={{
+                      backgroundColor: '#ffffff',
+                      border: '1px solid #cbd5e1',
+                      borderRadius: 8,
+                      boxShadow: '0 8px 24px rgba(15, 23, 42, 0.08)',
+                      fontSize: 12
+                    }}
+                  />
+                  <Legend
+                    wrapperStyle={{ fontSize: 11, paddingTop: 8 }}
+                    formatter={(value) => (value === 'avg_unit_value' ? 'Avg Unit Value USD' : 'Predicted Price')}
+                  />
+                  
+                  {/* Historical Benchmark Reference Lines */}
+                  <ReferenceLine
+                    y={6.64}
+                    stroke="#b91c1c"
+                    strokeDasharray="3 3"
+                    label={{ value: 'Peak $6.64 (Jun 2024)', position: 'top', fill: '#b91c1c', fontSize: 10, fontWeight: 700 }}
+                  />
+                  <ReferenceLine
+                    y={2.30}
+                    stroke="#0f766e"
+                    strokeDasharray="3 3"
+                    label={{ value: 'Trough $2.30 (Jul 2025)', position: 'bottom', fill: '#0f766e', fontSize: 10, fontWeight: 700 }}
+                  />
 
-                {/* Blue Line: Historical Unit Value */}
-                <Line
-                  type="monotone"
-                  dataKey="avg_unit_value"
-                  name="Avg Unit Value USD"
-                  stroke="#0284c7"
-                  strokeWidth={2.4}
-                  dot={{ r: 2.5, fill: '#0284c7', strokeWidth: 1 }}
-                  activeDot={{ r: 5, strokeWidth: 2, fill: '#ffffff' }}
-                  connectNulls={false}
-                />
+                  {/* Blue Line: Historical Unit Value */}
+                  <Line
+                    type="monotone"
+                    dataKey="avg_unit_value"
+                    name="Avg Unit Value USD"
+                    stroke="#0284c7"
+                    strokeWidth={2.4}
+                    dot={{ r: 2.5, fill: '#0284c7', strokeWidth: 1 }}
+                    activeDot={{ r: 5, strokeWidth: 2, fill: '#ffffff' }}
+                    connectNulls={false}
+                  />
 
-                {/* Red Line: Predicted Forward Curve */}
-                <Line
-                  type="monotone"
-                  dataKey="predicted_price"
-                  name="Predicted Price"
-                  stroke="#dc2626"
-                  strokeWidth={2.8}
-                  dot={{ r: 4, fill: '#dc2626', stroke: '#ffffff', strokeWidth: 1.5 }}
-                  activeDot={{ r: 6, strokeWidth: 2, fill: '#ffffff' }}
-                  connectNulls={true}
-                />
-              </ComposedChart>
+                  {/* Red Line: Predicted Forward Curve */}
+                  <Line
+                    type="monotone"
+                    dataKey="predicted_price"
+                    name="Predicted Price"
+                    stroke="#dc2626"
+                    strokeWidth={2.8}
+                    dot={{ r: 4, fill: '#dc2626', stroke: '#ffffff', strokeWidth: 1.5 }}
+                    activeDot={{ r: 6, strokeWidth: 2, fill: '#ffffff' }}
+                    connectNulls={true}
+                  />
+                </ComposedChart>
+              )}
             </ResponsiveContainer>
           </div>
         </div>

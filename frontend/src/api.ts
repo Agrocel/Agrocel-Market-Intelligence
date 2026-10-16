@@ -35,3 +35,16 @@ export const getNewsSources = () => request<NewsSourceItem[]>('/news/sources');
 export const triggerNewsIngestion = () => request<{ status: string; message: string; stats: any }>('/news/ingest/trigger', { method: 'POST' });
 export const getDataSourcesSummary = () => request<import('./types').DataSourcesSummary>('/data-sources/summary');
 
+export const getCompetitorDossiers = () => request<import('./types').CompetitorDossierSummary[]>('/competitors/dossiers');
+export const getCompetitorDossier = (competitorId: number) => request<import('./types').CompetitorDossierDetail>(`/competitors/${competitorId}/dossier`);
+export const getCompetitorPulse = () => request<import('./types').CompetitorPulseItem[]>('/competitors/pulse');
+export const getCompleteOverview = (frequency: 'monthly' | 'quarterly' | 'yearly' = 'monthly') =>
+  request<import('./types').ExecutiveOverviewComplete>(`/dashboard/overview-complete?frequency=${frequency}`);
+
+export const getSupplyIntelligence = () =>
+  request<import('./types').Section2Supply>('/supply/intelligence');
+
+export const refreshSupplyIntelligence = () =>
+  request<import('./types').Section2Supply>('/supply/refresh', { method: 'POST' });
+
+

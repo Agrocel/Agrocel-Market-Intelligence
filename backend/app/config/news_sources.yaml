@@ -155,3 +155,25 @@ sources:
     active: true
     fetch_frequency_minutes: 720
     notes: "SEC-reporting producer of bromine and crude salt in Shandong Province, China."
+
+  - source_name: "Chemistry Australia"
+    source_type: "OFFICIAL_WEBSITE"
+    base_url: "https://chemistryaustralia.org.au"
+    feed_url: "https://chemistryaustralia.org.au/news/feed"
+    publisher_region: "Australia"
+    default_reliability_grade: "A"
+    allowed_for_automated_fetch: true
+    active: true
+    fetch_frequency_minutes: 360
+    notes: "Peak national body representing Australia chemistry industry, feedstocks, trade policy, and flame retardant standards."
+
+  - source_name: "AICIS (Australian Industrial Chemicals Introduction Scheme)"
+    source_type: "OFFICIAL_WEBSITE"
+    base_url: "https://www.industrialchemicals.gov.au"
+    feed_url: null
+    publisher_region: "Australia"
+    default_reliability_grade: "A"
+    allowed_for_automated_fetch: true
+    active: true
+    fetch_frequency_minutes: 720
+    notes: "Australian statutory body regulating chemical imports, biocides, and flame retardant environmental safety."

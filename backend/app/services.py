@@ -82,6 +82,10 @@ def overview(db: Session, start: str | None = None, end: str | None = None):
     change = 0.0
     if len(prices) > 1 and prices[1].price_value > 0:
         change = ((latest.price_value - prices[1].price_value) / prices[1].price_value) * 100.0
+    elif latest:
+        prior_p = db.scalars(pq.where(MarketPrice.price_date < latest.price_date).order_by(MarketPrice.price_date.desc()).limit(1)).first()
+        if prior_p and prior_p.price_value > 0:
+            change = ((latest.price_value - prior_p.price_value) / prior_p.price_value) * 100.0
 
     # 2. Trade (Customs Manifests)
     def trade(direction):

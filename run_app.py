@@ -1,7 +1,5 @@
 """
 Agrocel Bromine Market Intelligence Pilot - Unified Application Launcher
-Starts both the FastAPI backend (port 8000) and the Vite frontend (port 5173).
-Handles clean shutdown of both processes when interrupted (Ctrl+C).
 """
 
 import os
@@ -25,7 +23,6 @@ BACKEND_DIR = BASE_DIR / "backend"
 FRONTEND_DIR = BASE_DIR / "frontend"
 
 processes = []
-
 def stream_output(process, prefix, color_code):
     """Streams stdout/stderr from child process with formatted prefix."""
     reset_code = "\033[0m"
@@ -69,9 +66,20 @@ def main():
     signal.signal(signal.SIGINT, signal_handler)
     signal.signal(signal.SIGTERM, signal_handler)
 
+    # Detect python interpreter with uvicorn installed
+    py_exec = sys.executable
+    for candidate in [sys.executable, "python", "py -3.12", "python3"]:
+        try:
+            r = subprocess.run([candidate, "-c", "import uvicorn, fastapi"], capture_output=True, timeout=2)
+            if r.returncode == 0:
+                py_exec = candidate
+                break
+        except Exception:
+            pass
+
     # 1. Start Backend
-    print("\033[32m[1/2] Starting FastAPI Backend on http://localhost:8000 ...\033[0m", flush=True)
-    backend_cmd = [sys.executable, "-m", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+    print(f"\033[32m[1/2] Starting FastAPI Backend ({py_exec}) on http://localhost:8000 ...\033[0m", flush=True)
+    backend_cmd = [py_exec, "-m", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
     backend_proc = subprocess.Popen(
         backend_cmd,
         cwd=str(BACKEND_DIR),

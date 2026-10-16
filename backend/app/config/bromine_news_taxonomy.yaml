@@ -72,6 +72,10 @@ geographies:
     keywords: ["Middle East", "Israel", "Dead Sea", "Jordan", "Sdom", "Safi", "Red Sea", "Suez"]
     is_major_producer: true
     is_major_consumer: false
+  Australia:
+    keywords: ["Australia", "Australian", "Western Australia", "Perth", "Queensland", "Kwinana", "Chemistry Australia", "ECTA", "AICIS", "DCCEEW"]
+    is_major_producer: false
+    is_major_consumer: true
   Global:
     keywords: ["Global", "Worldwide", "International", "Seaborne", "Maritime"]
     is_major_producer: false

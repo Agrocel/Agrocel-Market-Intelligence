@@ -1,19 +1,27 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { getDashboard } from './api';
-import type { DashboardData, DateRangeKey } from './types';
-import { ChatInterface } from './components/Chat';
-import { ErrorState, LoadingSkeleton, Reveal } from './components/Common';
+import type { DashboardData, DateRangeKey, DataGroundingItem } from './types';
+import { ErrorState, LoadingSkeleton } from './components/Common';
 import { ExecutiveHeader } from './components/Header';
-import { IntelligenceFeed, RiskOpportunityPanel } from './components/Intelligence';
-import { MarketSection } from './components/Market';
-import { MarketNarrative } from './components/MarketNarrative';
 import { ManualModal } from './components/Modals';
-import { HeroOverview } from './components/Overview';
-import { SalesMarketComparison } from './components/Sales';
-import { TradeIntelligence } from './components/Trade';
-import { NewsIntelligenceSection } from './components/NewsIntelligenceSection';
 import { DataSourcesPage } from './components/DataSourcesPage';
+import { ProvenanceDrawer } from './components/DataProvenance';
+
+import { OverviewPage } from './pages/OverviewPage';
+import { PriceIntelligencePage } from './pages/PriceIntelligencePage';
+import { SupplyCapacityPage } from './pages/SupplyCapacityPage';
+import { DemandIntelligencePage } from './pages/DemandIntelligencePage';
+import { BusinessTradePage } from './pages/BusinessTradePage';
+import { ProductionOperationsPage } from './pages/ProductionOperationsPage';
+import { PlantOutagesPage } from './pages/PlantOutagesPage';
+import { CompetitorIntelligencePage } from './pages/CompetitorIntelligencePage';
+import { QuarterlyReportPage } from './pages/QuarterlyReportPage';
+import { ForecastsScenariosPage } from './pages/ForecastsScenariosPage';
+import { NewsCompetitorsPage } from './pages/NewsCompetitorsPage';
+import { AskIntelligencePage } from './pages/AskIntelligencePage';
+
+import { parseHash, navigateTo, type AppRoute, type RouteState } from './navigation';
 import './style.css';
 
 function App() {
@@ -23,13 +31,43 @@ function App() {
   const [error, setError] = useState(false);
   const [refreshed, setRefreshed] = useState<Date | null>(null);
   const [manual, setManual] = useState(false);
-  const [currentPage, setCurrentPage] = useState<'dashboard' | 'datasources'>('dashboard');
+
+  // Hash-based routing state
+  const [routeState, setRouteState] = useState<RouteState>(() =>
+    parseHash(window.location.hash)
+  );
+
+  // Global Provenance Drawer state
+  const [selectedGrounding, setSelectedGrounding] = useState<DataGroundingItem | null>(null);
+
+  // Synchronize with URL hash changes (browser Back/Forward/direct link)
+  useEffect(() => {
+    const onHashChange = () => {
+      setRouteState(parseHash(window.location.hash));
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    // If no initial hash, set to #/overview
+    if (!window.location.hash) {
+      window.location.hash = '#/overview';
+    }
+
+    window.addEventListener('hashchange', onHashChange);
+    return () => window.removeEventListener('hashchange', onHashChange);
+  }, []);
+
+  const handleNavigate = useCallback((route: AppRoute, subTab?: string) => {
+    navigateTo(route, subTab);
+    setRouteState({ route, subTab });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, []);
 
   const load = useCallback(async () => {
     setLoading(true);
     setError(false);
     try {
-      setData(await getDashboard(range));
+      const res = await getDashboard(range);
+      setData(res);
       setRefreshed(new Date());
     } catch {
       setError(true);
@@ -42,13 +80,14 @@ function App() {
     load();
   }, [load]);
 
-  if (loading && !data && currentPage === 'dashboard') {
+  // Initial loading state before data is populated
+  if (loading && !data && routeState.route !== 'data-coverage') {
     return (
       <>
         <ExecutiveHeader
           refreshed={refreshed}
-          currentPage={currentPage}
-          onNavigate={setCurrentPage}
+          currentRoute={routeState.route}
+          onNavigate={handleNavigate}
         />
         <LoadingSkeleton />
       </>
@@ -59,91 +98,153 @@ function App() {
     <>
       <ExecutiveHeader
         refreshed={refreshed}
-        currentPage={currentPage}
-        onNavigate={setCurrentPage}
+        currentRoute={routeState.route}
+        onNavigate={handleNavigate}
       />
 
-      {currentPage === 'datasources' ? (
-        <DataSourcesPage onBackToDashboard={() => setCurrentPage('dashboard')} />
-      ) : (
-        <main className="page-shell">
-          {error && !data ? (
+      {loading && <div className="refresh-line" aria-label="Refreshing data" />}
+
+      {/* Main Page Area */}
+      <main className="app-main-content">
+        {error && !data ? (
+          <div className="page-shell">
             <ErrorState retry={load} />
-          ) : (
-            data && (
-              <>
-                {/* Hero & KPI Cards */}
-                <Reveal>
-                  <HeroOverview
-                    data={data.overview}
-                    prices={data.prices}
-                    range={range}
-                    onRange={setRange}
-                    onOpenDataSources={() => setCurrentPage('datasources')}
-                  />
-                </Reveal>
+          </div>
+        ) : (
+          <>
+            {routeState.route === 'overview' && data && (
+              <OverviewPage
+                data={data}
+                range={range}
+                onRange={setRange}
+                onNavigate={handleNavigate}
+                onSelectGrounding={setSelectedGrounding}
+              />
+            )}
 
-                {/* AI Grounded Market Narrative & Who Did What (Directly below KPI cards) */}
-                <Reveal>
-                  <MarketNarrative brief={data.brief} />
-                </Reveal>
+            {(routeState.route === 'price-intelligence' || routeState.route === 'market-intelligence') && data && (
+              <PriceIntelligencePage
+                data={data}
+                activeSubTab={routeState.subTab || 'benchmarks'}
+                onSubTabChange={tab => handleNavigate('price-intelligence', tab)}
+                onSelectGrounding={setSelectedGrounding}
+              />
+            )}
 
-                {loading && <div className="refresh-line" aria-label="Refreshing data" />}
+            {routeState.route === 'supply-capacity' && data && (
+              <SupplyCapacityPage
+                data={data}
+                onNavigate={handleNavigate}
+              />
+            )}
 
-                <Reveal>
-                  <MarketSection prices={data.prices} items={data.intelligence} />
-                </Reveal>
+            {routeState.route === 'demand-intelligence' && data && (
+              <DemandIntelligencePage
+                data={data}
+                onNavigate={handleNavigate}
+                onSelectGrounding={setSelectedGrounding}
+              />
+            )}
 
-                <Reveal>
-                  <TradeIntelligence records={data.trade} />
-                </Reveal>
+            {(routeState.route === 'business-trade' || routeState.route === 'trade-intelligence') && data && (
+              <BusinessTradePage
+                data={data}
+                activeSubTab={routeState.subTab || 'agrocel'}
+                onSubTabChange={tab => handleNavigate('business-trade', tab)}
+              />
+            )}
 
-                <Reveal>
-                  <SalesMarketComparison sales={data.sales} prices={data.prices} />
-                </Reveal>
+            {routeState.route === 'production-operations' && data && (
+              <ProductionOperationsPage
+                data={data}
+                onNavigate={handleNavigate}
+                onSelectGrounding={setSelectedGrounding}
+              />
+            )}
 
-                {/* Global Bromine News & Official Regulatory Radar */}
-                <Reveal>
-                  <NewsIntelligenceSection />
-                </Reveal>
+            {routeState.route === 'plant-outages' && data && (
+              <PlantOutagesPage
+                data={data}
+                onNavigate={handleNavigate}
+                onSelectGrounding={setSelectedGrounding}
+              />
+            )}
 
-                <Reveal>
-                  <IntelligenceFeed
-                    items={data.intelligence}
-                    competitors={data.competitors}
-                    stocks={data.stocks}
-                  />
-                </Reveal>
+            {routeState.route === 'competitor-intelligence' && data && (
+              <CompetitorIntelligencePage
+                data={data}
+                onNavigate={handleNavigate}
+                onSelectGrounding={setSelectedGrounding}
+              />
+            )}
 
-                <Reveal>
-                  <RiskOpportunityPanel items={data.intelligence} />
-                </Reveal>
+            {routeState.route === 'quarterly-report' && data && (
+              <QuarterlyReportPage
+                data={data}
+                onNavigate={handleNavigate}
+                onSelectGrounding={setSelectedGrounding}
+              />
+            )}
 
-                <Reveal>
-                  <ChatInterface />
-                </Reveal>
+            {routeState.route === 'forecasts-scenarios' && data && (
+              <ForecastsScenariosPage
+                data={data}
+                onNavigate={handleNavigate}
+                onSelectGrounding={setSelectedGrounding}
+              />
+            )}
 
-                <footer className="page-footer">
-                  <div>
-                    <strong>Agrocel Market Intelligence</strong>
-                    <span>Bromine Pilot</span>
-                  </div>
-                  <div className="footer-links">
-                    <button className="footer-link-btn" onClick={() => setCurrentPage('datasources')}>
-                      Data Sources & Ranges
-                    </button>
-                    <button onClick={() => setManual(true)}>+ Add field intelligence</button>
-                  </div>
-                  <small>
-                    Data is sourced from the connected backend. Confidential commercial information must remain within authorized teams.
-                  </small>
-                </footer>
-              </>
-            )
-          )}
-        </main>
-      )}
+            {(routeState.route === 'news-developments' || routeState.route === 'news-competitors') && data && (
+              <NewsCompetitorsPage
+                data={data}
+                activeSubTab={routeState.subTab || 'news'}
+                onSubTabChange={tab => handleNavigate('news-developments', tab)}
+              />
+            )}
 
+            {routeState.route === 'ask-intelligence' && (
+              <AskIntelligencePage />
+            )}
+
+            {routeState.route === 'data-coverage' && (
+              <DataSourcesPage onBackToDashboard={() => handleNavigate('overview')} />
+            )}
+          </>
+        )}
+      </main>
+
+      {/* Global Application Footer */}
+      <footer className="page-footer">
+        <div className="footer-brand">
+          <strong>Agrocel Market Intelligence</strong>
+          <span>Bromine Pilot · Strategic Decision Desk</span>
+        </div>
+        <div className="footer-links">
+          <button
+            className="footer-link-btn"
+            onClick={() => handleNavigate('data-coverage')}
+          >
+            Data Coverage & Spans
+          </button>
+          <button
+            className="footer-link-btn primary-action"
+            onClick={() => setManual(true)}
+          >
+            + Add Field Intelligence
+          </button>
+        </div>
+        <small className="footer-disclaimer">
+          Confidential commercial and custom records. Data is restricted to authorized Agrocel management.
+        </small>
+      </footer>
+
+      {/* Global Slide-Over Provenance Inspector Drawer */}
+      <ProvenanceDrawer
+        item={selectedGrounding}
+        onClose={() => setSelectedGrounding(null)}
+      />
+
+      {/* Manual Field Intelligence Modal */}
       {manual && (
         <ManualModal
           onClose={() => setManual(false)}

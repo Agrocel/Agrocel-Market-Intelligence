@@ -372,3 +372,66 @@ class NewsIngestionRun(Base):
     source: Mapped["NewsSource | None"] = relationship(back_populates="ingestion_runs")
 
 
+class CompetitorReport(Base, Timestamped):
+    __tablename__ = 'competitor_reports'
+    id: Mapped[int] = mapped_column(primary_key=True)
+    competitor_id: Mapped[int] = mapped_column(ForeignKey('competitors.id'), index=True)
+    title: Mapped[str] = mapped_column(String(200), index=True)
+    report_type: Mapped[str] = mapped_column(String(50), index=True)  # ANNUAL_REPORT, 6K_REPORT, 10Q_REPORT, 10K_REPORT, TRANSCRIPT, Q1_REPORT, Q2_REPORT, Q3_REPORT, Q4_REPORT
+    fiscal_period: Mapped[str] = mapped_column(String(20), index=True)  # e.g., '2024-Q1', '2024-FY', '2025-Q3', '2025-FY'
+    filing_date: Mapped[date] = mapped_column(Date, index=True)
+    filing_authority: Mapped[str] = mapped_column(String(50), default='SEC EDGAR')  # SEC EDGAR, BSE/NSE, Deutsche Börse
+    source_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    executive_highlights: Mapped[str] = mapped_column(Text)
+    key_topics: Mapped[str] = mapped_column(String(300))  # e.g., "Flame Retardants, Pricing Pressure, Dead Sea Capex"
+    document_summary: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+    competitor: Mapped["Competitor"] = relationship()
+    metrics: Mapped[list["CompetitorExtractedMetric"]] = relationship(back_populates="report", cascade="all, delete-orphan")
+    findings: Mapped[list["CompetitorStrategicFinding"]] = relationship(back_populates="report", cascade="all, delete-orphan")
+
+
+class CompetitorExtractedMetric(Base, Timestamped):
+    __tablename__ = 'competitor_extracted_metrics'
+    __table_args__ = (
+        UniqueConstraint('competitor_id', 'fiscal_period', 'segment_name', name='uq_comp_metric_period_seg'),
+        Index('ix_comp_metric_period', 'competitor_id', 'fiscal_period'),
+    )
+    id: Mapped[int] = mapped_column(primary_key=True)
+    competitor_id: Mapped[int] = mapped_column(ForeignKey('competitors.id'), index=True)
+    report_id: Mapped[int | None] = mapped_column(ForeignKey('competitor_reports.id'), nullable=True, index=True)
+    fiscal_period: Mapped[str] = mapped_column(String(20), index=True)  # '2024-Q1', '2024-FY', etc.
+    period_date: Mapped[date] = mapped_column(Date, index=True)
+    is_annual: Mapped[bool] = mapped_column(Boolean, default=False, index=True)
+    segment_name: Mapped[str] = mapped_column(String(100), default='Bromine & Specialties')
+    currency: Mapped[str] = mapped_column(String(8), default='USD')
+    segment_revenue_usd_m: Mapped[float | None] = mapped_column(Float, nullable=True)
+    sales_volume_mt: Mapped[float | None] = mapped_column(Float, nullable=True)
+    segment_ebitda_usd_m: Mapped[float | None] = mapped_column(Float, nullable=True)
+    ebitda_margin_pct: Mapped[float | None] = mapped_column(Float, nullable=True)
+    realized_price_per_mt: Mapped[float | None] = mapped_column(Float, nullable=True)
+    capacity_utilization_pct: Mapped[float | None] = mapped_column(Float, nullable=True)
+
+    competitor: Mapped["Competitor"] = relationship()
+    report: Mapped["CompetitorReport | None"] = relationship(back_populates="metrics")
+
+
+class CompetitorStrategicFinding(Base, Timestamped):
+    __tablename__ = 'competitor_strategic_findings'
+    id: Mapped[int] = mapped_column(primary_key=True)
+    competitor_id: Mapped[int] = mapped_column(ForeignKey('competitors.id'), index=True)
+    report_id: Mapped[int | None] = mapped_column(ForeignKey('competitor_reports.id'), nullable=True, index=True)
+    fiscal_period: Mapped[str] = mapped_column(String(20), index=True)
+    category: Mapped[str] = mapped_column(String(50), index=True)  # PRICING_OUTLOOK, MARKET_BOTTOM, CAPACITY_EXPANSION, SUPPLY_DISRUPTION, AGROCEL_IMPLICATION
+    headline: Mapped[str] = mapped_column(String(200))
+    summary: Mapped[str] = mapped_column(Text)
+    transcript_quote: Mapped[str | None] = mapped_column(Text, nullable=True)
+    speaker: Mapped[str | None] = mapped_column(String(100), nullable=True)  # e.g., "Kent Masters (CEO)"
+    sentiment: Mapped[str] = mapped_column(String(20), default='NEUTRAL')  # BULLISH, BEARISH, DISCIPLINED, CAUTIOUS
+    agrocel_takeaway: Mapped[str] = mapped_column(Text)
+
+    competitor: Mapped["Competitor"] = relationship()
+    report: Mapped["CompetitorReport | None"] = relationship(back_populates="findings")
+
+
+
