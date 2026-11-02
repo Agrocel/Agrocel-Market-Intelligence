@@ -315,6 +315,8 @@ export interface Section1PriceBenchmarks {
     headroom_pct: number;
     is_safe_buffer: boolean;
     status_label: string;
+    inr_usd_exchange_rate?: number;
+    exchange_rate_source?: string;
   };
   recent_import_deals?: Array<{
     date: string;
@@ -672,6 +674,20 @@ export interface Section8Forecasts {
     model_type: string;
     points: PriceForecastPoint[];
     interpretation: string;
+    model_metadata?: {
+      model_name: string;
+      algorithm: string;
+      model_version: string;
+      training_cutoff: string;
+      training_observations: number;
+      evaluation_metrics: {
+        mae_usd_mt: number;
+        rmse_usd_mt: number;
+        mape_pct: number;
+      };
+      prediction_intervals: string[];
+      run_timestamp: string;
+    } | null;
   };
   supply_outlook: {
     direction: string;
@@ -729,6 +745,117 @@ export interface ExecutiveOverviewComplete {
   section_7_competitors: Section7Competitors;
   section_8_forecasts: Section8Forecasts;
   section_9_news: Section9News;
+}
+
+export interface ArbitrageSpreadPoint {
+  period: string;
+  month_label: string;
+  cif_usd_mt: number | null;
+  fx_rate: number;
+  landed_parity_inr_kg: number | null;
+  agrocel_realization_inr_kg: number | null;
+  arbitrage_spread_inr_kg: number | null;
+  spread_pct: number | null;
+  status: 'SAFE_BUFFER' | 'IMPORT_RISK' | 'NEUTRAL';
+  import_volume_mt: number;
+  agrocel_volume_mt: number;
+}
+
+export interface LandedParityBreakdown {
+  assessed_cif_inr_kg: number;
+  customs_duty_inr_kg: number;
+  port_handling_inr_kg: number;
+  inland_freight_inr_kg: number;
+  true_landed_inr_kg: number;
+  true_landed_usd_mt: number;
+}
+
+export interface NegotiationCorridor {
+  ceiling_price_inr_kg: number;
+  target_price_inr_kg: number;
+  floor_price_inr_kg: number;
+  agrocel_current_realization_inr_kg: number;
+  current_headroom_inr_kg: number;
+  headroom_pct: number;
+  recommendation_badge: string;
+  commercial_guidance: string;
+}
+
+export interface ArbitrageCockpitData {
+  status: string;
+  benchmark_period: string;
+  baseline_parameters: {
+    latest_cif_usd_mt: number;
+    current_fx_rate: number;
+    default_bcd_pct: number;
+    default_swc_pct: number;
+    default_port_handling_inr_kg: number;
+    default_inland_freight_inr_kg: number;
+    agrocel_latest_realization_inr_kg: number;
+  };
+  simulation_parameters: {
+    cif_usd_mt: number;
+    fx_rate: number;
+    bcd_pct: number;
+    swc_pct: number;
+    port_handling_inr_kg: number;
+    inland_freight_inr_kg: number;
+  };
+  breakdown: LandedParityBreakdown;
+  negotiation_corridor: NegotiationCorridor;
+  historical_spread_series: ArbitrageSpreadPoint[];
+}
+
+export interface ExportRadarManifestItem {
+  id: number;
+  trade_date: string;
+  company: string;
+  port: string;
+  destination: string;
+  foreign_port: string;
+  quantity_mt: number;
+  fob_usd_per_mt: number;
+  trade_value_usd: number;
+  bill_no: string;
+}
+
+export interface ExportRadarMonthlyPoint {
+  month: string;
+  total_mt: number;
+  china_mt: number;
+  other_mt: number;
+  china_share_pct: number;
+  fob_usd_mt: number;
+  total_usd: number;
+  shipments: number;
+}
+
+export interface ExportRadarSummary {
+  total_historical_volume_mt: number;
+  total_shipments: number;
+  latest_month: string;
+  latest_month_volume_mt: number;
+  latest_month_fob_usd_mt: number;
+  trailing_3m_avg_mt: number;
+  trailing_6m_avg_mt: number;
+  baseline_export_target_mt: number;
+  china_share_pct: number;
+  diversion_risk_level: 'ELEVATED' | 'MODERATE' | 'LOW';
+  diversion_risk_badge: string;
+  estimated_domestic_spillover_mt: number;
+  threat_narrative: string;
+  commercial_action: string;
+}
+
+export interface CompetitorExportRadarData {
+  selected_company: 'ARCHEAN' | 'SATYESH' | 'ALL';
+  company_display_name: string;
+  plant_location: string;
+  export_port: string;
+  primary_destination: string;
+  summary: ExportRadarSummary;
+  monthly_series: ExportRadarMonthlyPoint[];
+  recent_manifests: ExportRadarManifestItem[];
 }
 
 

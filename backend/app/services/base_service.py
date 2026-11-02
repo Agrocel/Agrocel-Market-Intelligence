@@ -4,7 +4,7 @@ from typing import Optional, Dict, Any, Tuple
 from sqlalchemy import select, func, desc
 from sqlalchemy.orm import Session
 
-from .models import (
+from ..models import (
     MarketPrice, TradeRecord, SalesRecord, IntelligenceItem,
     SourceDocument, CompetitorStockPrice, NewsSource, NewsArticle, NewsIntelligence
 )
@@ -67,13 +67,11 @@ def overview(db: Session, start: str | None = None, end: str | None = None):
         is_default_common = (d_start == m_start and d_end == m_end)
 
     # 1. Prices (standardized to USD benchmark)
-    # Pick the price observation within or immediately up to d_end
     pq = select(MarketPrice).where(MarketPrice.currency == 'USD')
     if d_start:
         pq_period = pq.where(MarketPrice.price_date >= d_start, MarketPrice.price_date <= d_end).order_by(MarketPrice.price_date.desc()).limit(2)
         prices = db.scalars(pq_period).all()
         if not prices:
-            # Fall back to latest observation up to d_end
             prices = db.scalars(pq.where(MarketPrice.price_date <= d_end).order_by(MarketPrice.price_date.desc()).limit(2)).all()
     else:
         prices = db.scalars(pq.where(MarketPrice.price_date <= d_end).order_by(MarketPrice.price_date.desc()).limit(2)).all()

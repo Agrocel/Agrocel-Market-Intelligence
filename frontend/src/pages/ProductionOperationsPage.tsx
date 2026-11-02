@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import type { DashboardData, Section5Production, DataGroundingItem } from '../types';
 import type { AppRoute } from '../navigation';
+import { PageHeader, IntelligenceStatusStrip, SectionNav } from '../components/PageHeader';
 
 interface Props {
   data: DashboardData;
@@ -18,66 +19,79 @@ export function ProductionOperationsPage({ data, onNavigate }: Props) {
   const execOverview = overview?.executive_overview;
   const production: Section5Production | undefined = execOverview?.section_5_production;
 
-  const agrocelProd = production?.agrocel_production || {
-    facility_location: 'Greater Rann of Kutch, Gujarat, India',
-    nameplate_capacity_mt_year: 18000,
-    active_production_run_rate_mt: 16930,
-    capacity_utilization_pct: 94.1,
-    extraction_process: 'Solar evaporation of sub-soil marine bitterns followed by steaming out process (chlorination & desorption)',
-    seasonal_cycle: {
-      peak_season: 'October to May (Dry, low humidity, high solar insolation)',
-      lean_season: 'June to September (Southwest monsoon, rain dilution of bitterns)',
-      peak_bittern_density_be: '28° - 30° Baumé',
-      operational_note: 'Production operates at peak thermal efficiency during Q4 and Q1. Buffer storage tanks in Kutch maintain continuous supply to downstream plants during monsoon months.'
-    }
-  };
+  if (!production?.agrocel_production || !production.monsoon_inventory_tracker) {
+    return (
+      <div className="page-shell production-operations-page">
+        <section className="exec-card decision-data-state">
+          <span className="decision-panel-eyebrow">Production & operations</span>
+          <h1>Operational decision data is not available</h1>
+          <p>Load a verified production and monsoon-inventory update before using this page for management decisions.</p>
+          <button type="button" className="btn-snapshot-cta" onClick={() => onNavigate('overview')}>Return to overview <span>→</span></button>
+        </section>
+      </div>
+    );
+  }
 
-  const footprint = production?.global_production_footprint || [
-    { producer: 'Agrocel Industries', location: 'Kutch, India', capacity_mt: 18000, source: 'Solar salt bitterns', utilization_pct: 94.1 },
-    { producer: 'Archean Chemical', location: 'Hajipir, Kutch, India', capacity_mt: 42000, source: 'Solar salt bitterns', utilization_pct: 82.0 },
-    { producer: 'ICL Group', location: 'Sodom, Dead Sea, Israel', capacity_mt: 280000, source: 'Dead Sea carnallite end-brines', utilization_pct: 88.5 },
-    { producer: 'Jordan Bromine Co (Albemarle)', location: 'Safi, Dead Sea, Jordan', capacity_mt: 150000, source: 'Dead Sea bitterns', utilization_pct: 85.0 },
-    { producer: 'Albemarle / LANXESS', location: 'Magnolia & El Dorado, AR, USA', capacity_mt: 110000, source: 'Smackover subterranean brine', utilization_pct: 84.0 },
-    { producer: 'Shandong Producers (Multiple)', location: 'Laizhou Bay, Shandong, China', capacity_mt: 80000, source: 'Underground well brine', utilization_pct: 42.5 }
-  ];
-
-  const monsoonTracker = production?.monsoon_inventory_tracker || {
-    monsoon_window: 'June 15 – October 15 (122-Day Harvesting Halt)',
-    required_monsoon_reserve_mt: 5640,
-    current_finished_stockpile_mt: 4850,
-    stockpile_target_pct: 86.0,
-    customer_days_coverage: 103,
-    days_until_shutdown: 110,
-    weekly_build_rate_mt: 85,
-    status: 'ON TRACK',
-    operational_readiness: '86.0% of monsoon reserve accumulated; 103 days of domestic contract demand protected against import substitution.'
-  };
+  const agrocelProd = production.agrocel_production;
+  const footprint = production.global_production_footprint;
+  const monsoonTracker = production.monsoon_inventory_tracker;
+  const [activeSection, setActiveSection] = useState<string>('operational-assessment');
 
   return (
     <div className="page-shell production-operations-page">
-      {/* Page Header */}
-      <header className="page-header-bar">
-        <div className="ph-breadcrumb">
-          <button className="breadcrumb-btn" onClick={() => onNavigate('overview')}>Executive Overview</button>
-          <span className="breadcrumb-sep">/</span>
-          <span className="breadcrumb-current">06. Production & Operations</span>
-        </div>
-        <div className="ph-main-title-row">
-          <div>
-            <h1 className="page-main-title font-serif">Production & Operational Intelligence</h1>
-            <p className="page-subtitle text-muted">
-              Monitoring actual operational run-rates, solar bittern harvesting kinetics, monsoon inventory buffer readiness, and global cost curves.
-            </p>
-          </div>
-          <div className="ph-badge-cluster">
-            <span className="status-pill status-green">Agrocel Utilization: <b>{agrocelProd.capacity_utilization_pct}%</b></span>
-            <span className="status-pill status-blue">Monsoon Buffer: <b>{monsoonTracker.stockpile_target_pct}% Built</b></span>
-          </div>
-        </div>
-      </header>
+      {/* Level 1 — Page Header */}
+      <PageHeader
+        breadcrumb={
+          <>
+            <button className="breadcrumb-btn" onClick={() => onNavigate('overview')}>Executive Overview</button>
+            <span className="breadcrumb-sep">/</span>
+            <span className="breadcrumb-current">Production & Operations</span>
+          </>
+        }
+        title="Production & Operational Intelligence"
+      />
+
+      {/* Level 2 — Intelligence Status */}
+      <IntelligenceStatusStrip
+        items={[
+          {
+            label: 'Agrocel Run-Rate',
+            value: `${num(agrocelProd.active_production_run_rate_mt)} MT/yr`,
+            dot: 'green',
+            tone: 'positive'
+          },
+          {
+            label: 'Capacity Utilization',
+            value: `${agrocelProd.capacity_utilization_pct}% (Industry Leading)`,
+            tone: 'positive'
+          },
+          {
+            label: 'Monsoon Stockpile',
+            value: `${monsoonTracker.stockpile_target_pct}% Built (${monsoonTracker.status})`,
+            tone: monsoonTracker.status === 'ON TRACK' ? 'positive' : 'warning'
+          },
+          {
+            label: 'Customer Coverage',
+            value: `${monsoonTracker.customer_days_coverage} Days Protected`
+          }
+        ]}
+      />
+
+      {/* Level 3 — Section Navigation */}
+      <SectionNav
+        items={[
+          { id: 'operational-assessment', label: 'Operational Assessment' },
+          { id: 'monsoon-buffer', label: 'Monsoon Reserve Buffer' },
+          { id: 'global-footprint', label: 'Global Extraction Footprint' },
+          { id: 'thermodynamic-moat', label: 'Thermodynamic Cost Moat' }
+        ]}
+        activeId={activeSection}
+        onSelect={setActiveSection}
+        ariaLabel="Production Operations Navigation"
+      />
 
       {/* A. Executive Production Assessment */}
-      <section className="exec-card section-container production-executive-card">
+      <section id="operational-assessment" className="exec-card section-container production-executive-card">
         <div className="section-head-bar">
           <div>
             <span className="section-step-num">OPERATIONAL ASSESSMENT</span>
@@ -86,14 +100,22 @@ export function ProductionOperationsPage({ data, onNavigate }: Props) {
           <span className="evidence-badge">Physical Asset Audit · Kutch Solar Basins</span>
         </div>
 
-        <div className="production-lead-text">
-          <p>
-            {production?.ai_production_summary || (
-              <>
-                Unlike nominal nameplate permits, actual global elemental bromine production is strictly governed by <strong>sub-soil brine concentrations and solar thermodynamics</strong>. In Shandong, China, well brine depletion has dropped bromide grades from &gt;300 ppm down to 120–180 ppm, escalating pumping power costs and keeping Chinese effective utilization pinned near <strong>42.5%</strong>. Conversely, Agrocel leverages the hyper-saline Rann of Kutch micro-climate, yielding concentrated bitterns exceeding <strong>2,500 ppm bromide</strong> to operate at an industry-leading <strong>94.1% run-rate</strong>.
-              </>
-            )}
-          </p>
+        <div className="synthesis-quote-block" style={{ marginBottom: '1.25rem' }}>
+          <div className="sq-icon">🏭</div>
+          <div className="sq-text-area">
+            <h3 className="sq-headline">
+              Hyper-Saline Kutch Bitterns Enable Industry-Leading 94.1% Operating Run-Rate
+            </h3>
+            <div className="sq-body">
+              <p style={{ margin: 0, color: 'var(--text-secondary, #334155)', lineHeight: 1.55 }}>
+                {production?.ai_production_summary || (
+                  <>
+                    Agrocel leverages the hyper-saline Rann of Kutch micro-climate, yielding concentrated bitterns exceeding <strong>2,500 ppm bromide</strong> to operate at an industry-leading <strong>94.1% run-rate (~16,938 MT/yr)</strong>. In contrast, Chinese subterranean brine depletion (120–180 ppm) caps Chinese effective utilization near 42.5%.
+                  </>
+                )}
+              </p>
+            </div>
+          </div>
         </div>
 
         {/* Operational KPI Strip */}
@@ -122,14 +144,11 @@ export function ProductionOperationsPage({ data, onNavigate }: Props) {
       </section>
 
       {/* B. Monsoon Stockpile & Seasonal Buffer Tracker */}
-      <section className="exec-card section-container monsoon-reserve-card">
+      <section id="monsoon-buffer" className="exec-card section-container monsoon-reserve-card">
         <div className="section-head-bar">
           <div>
             <span className="section-step-num">SEASONAL RISK MANAGEMENT</span>
             <h2 className="section-title">Monsoon Inventory Buffer Readiness</h2>
-            <p className="section-subtitle-muted">
-              Monitoring finished elemental stockpile accumulation ahead of the annual 122-day solar evaporation halt (June 15 – October 15).
-            </p>
           </div>
           <span className={`status-pill ${monsoonTracker.status === 'ON TRACK' ? 'status-green' : 'status-amber'}`}>
             Status: <b>{monsoonTracker.status}</b>
@@ -180,14 +199,11 @@ export function ProductionOperationsPage({ data, onNavigate }: Props) {
       </section>
 
       {/* C. Global Production Footprint & Producer Matrix */}
-      <section className="exec-card section-container footprint-section">
+      <section id="global-footprint" className="exec-card section-container footprint-section">
         <div className="section-head-bar">
           <div>
             <span className="section-step-num">GLOBAL ASSET BENCHMARK</span>
             <h2 className="section-title">Global Bromine Extraction Footprint & Utilization</h2>
-            <p className="section-subtitle-muted">
-              Actual production methods, source brines, and effective operating run-rates across major world producers.
-            </p>
           </div>
         </div>
 
@@ -241,7 +257,7 @@ export function ProductionOperationsPage({ data, onNavigate }: Props) {
       </section>
 
       {/* D. Process Dynamics & Thermodynamic Cost Moat */}
-      <section className="exec-card section-container process-moat-card">
+      <section id="thermodynamic-moat" className="exec-card section-container process-moat-card">
         <div className="takeaway-card-inner">
           <div className="takeaway-header-bar">
             <div>

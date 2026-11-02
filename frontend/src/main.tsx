@@ -125,8 +125,9 @@ function App() {
             {(routeState.route === 'price-intelligence' || routeState.route === 'market-intelligence') && data && (
               <PriceIntelligencePage
                 data={data}
-                activeSubTab={routeState.subTab || 'benchmarks'}
+                activeSubTab={routeState.subTab || 'arbitrage'}
                 onSubTabChange={tab => handleNavigate('price-intelligence', tab)}
+                onNavigate={handleNavigate}
                 onSelectGrounding={setSelectedGrounding}
               />
             )}
@@ -134,6 +135,7 @@ function App() {
             {routeState.route === 'supply-capacity' && data && (
               <SupplyCapacityPage
                 data={data}
+                activeSectionAnchor={routeState.subTab}
                 onNavigate={handleNavigate}
               />
             )}
@@ -155,18 +157,18 @@ function App() {
             )}
 
             {routeState.route === 'production-operations' && data && (
-              <ProductionOperationsPage
+              <SupplyCapacityPage
                 data={data}
+                activeSectionAnchor="kutch-operations"
                 onNavigate={handleNavigate}
-                onSelectGrounding={setSelectedGrounding}
               />
             )}
 
             {routeState.route === 'plant-outages' && data && (
-              <PlantOutagesPage
+              <SupplyCapacityPage
                 data={data}
+                activeSectionAnchor="disruptions"
                 onNavigate={handleNavigate}
-                onSelectGrounding={setSelectedGrounding}
               />
             )}
 

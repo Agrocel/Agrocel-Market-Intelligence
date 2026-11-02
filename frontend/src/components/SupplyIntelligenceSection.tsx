@@ -111,11 +111,7 @@ export function SupplyIntelligenceSection({ supplyData, onRefresh }: Props) {
           ======================================================== */}
       <div className="section-head-bar">
         <div>
-          <span className="section-step-num">SECTION 02</span>
           <h2 className="section-title">Supply & Global Capacity</h2>
-          <p className="section-subtitle-muted">
-            Executive intelligence on global elemental bromine production, structural deficits, trade corridors, and domestic positioning.
-          </p>
         </div>
         <div className="section-head-actions">
           <div className="market-balance-indicator">

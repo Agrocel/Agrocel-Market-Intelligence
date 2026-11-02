@@ -1,0 +1,157 @@
+AGROCEL GROUP
+Market Intelligence Platform
+Blueprint & Framework — Draft for Leadership Review
+Prepared by: JMD Office
+August 2026:  Version 1.0 (Draft)
+1. Executive Summary
+Agrocel's people are in the market every day — meeting clients, negotiating with suppliers, attending exhibitions, and speaking with advisors and co-players across geographies. Today, the intelligence gathered through these interactions lives in scattered WhatsApp chats, inboxes, visit reports, and individual memory. It is rarely consolidated, rarely graded for reliability, and often lost. We started using CRM however, not utilizing and capitalizing enough due to ease of use and its own limitations.
+This blueprint proposes a single, AI-interfaced Market Intelligence (MI) Platform where every relevant team — Sales & Marketing, Business Development, Procurement, and Global Advisors (Israel, China, and others) etc. continuously feeds market signals in whatever form is natural to them: a WhatsApp text or voice note, a forwarded email, a meeting or visit report, or notes from a call or conference. The AI layer converts these raw inputs into structured, searchable intelligence, tags them to our products, segments, clients, suppliers, and competitors, grades them by reliability (trusted intel vs. rumour).
+In parallel, the platform will automatically monitor approved external sources — industry and competitor websites, Stock exchange updates for annual reports, financials etc., import/export data, and our existing paid subscriptions — so that human intelligence and market data reinforce each other in one place and presents them on role-based dashboards for decision-makers
+The purpose of this document is to secure leadership alignment on the framework, scope, and governance before detailed design and platform development begin.
+2. Vision & Objectives
+Vision: To make market intelligence a continuous, collective, and compounding asset of Agrocel — captured once, structured by AI, and available to every decision-maker who needs it, when they need it.
+Objectives
+Capture every valuable signal from the field before it is lost — with near-zero extra effort for the contributor.
+Convert unstructured inputs (voice, chat, email, reports) into structured, tagged, searchable intelligence using AI.
+Separate signal from noise by grading each item on source reliability and information credibility (trusted vs. rumour).
+Give leadership and teams live dashboards of what is happening across products, segments, clients, suppliers, and competitors.
+Blend human intel with automated monitoring of external sources (websites, import/export data, subscriptions).
+Protect sensitive commercial information through role-based permissions for feeding, viewing, and editing.
+3. Scope of Intelligence
+The platform covers intelligence relevant — directly or indirectly — to Agrocel's business today and its future potential:
+Dimension
+Coverage
+Products
+Existing product portfolio and future/potential products
+Segments & Industries
+Segments and industries relevant to Agrocel directly, or indirectly via our clients and suppliers.
+Clients
+Main clients, their business health, expansions, demand shifts, and their end-markets
+Suppliers
+Main suppliers — capacity, pricing trends, disruptions, new entrants
+Co-players / Competitors
+Competitor moves; pricing, capacity, new products, registrations, market entries/exits
+Markets & Regulation
+Geographic market trends, import/export flows, regulatory and policy changes
+4. Intelligence Sources & Input Channels
+A. Human intelligence (pushed by our teams)
+Contributors feed intel through the channel most convenient to them; the AI layer does the work:
+Channel
+Examples
+WhatsApp — text
+Quick field updates: “Competitor X offering product Y at $Z in China” to a dedicated contact
+WhatsApp — voice note
+Spoken update after a client meeting; AI transcribes, translates if needed, and structures it to a dedicated contact
+Email forward
+Forwarding a received client/supplier email to a dedicated mailbox
+Meeting / visit reports
+Upload Client visit reports, supplier audits, structured trip reports
+Call conversation notes
+Upload Summary notes of phone calls with clients and co-players
+Exhibitions & conferences
+Upload Observation reports, brochures, competitor stall intel, delegate conversations
+B. Automated external intelligence (pulled by AI)
+Listed websites of our industry, clients, suppliers, and co-players (competitors) — monitored for news articles, product launches, price announcements, and capacity changes.
+Import/export and trade data sources relevant to our products and markets.
+Already-subscribed reports and databases — ingested so paid intelligence is actually used, not shelved.
+Industry news, association updates, and regulatory notifications from an approved (during detailed design and can be expanded over time ) source list.
+5. The AI Interface — How Raw Input Becomes Intelligence
+Every input, regardless of channel, passes through the same AI pipeline:
+Step
+What the AI does
+1. Ingest
+Receives the WhatsApp message, voice note, email, report, or web content
+2. Convert
+Transcribes voice notes; extracts text from emails, attachments, and documents; translates where needed
+3. Structure
+Identifies the core intel: what happened, who is involved, which product/market, price/quantity figures, dates
+4. Tag
+Auto-tags to Agrocel's taxonomy: product, segment, industry, client, supplier, competitor, geography
+5. Grade
+Proposes a reliability grade (Section 6); contributor/curator can confirm or adjust
+6. Link
+Connects related items (e.g., three independent reports of the same intel strengthen each other)
+7. Present
+Feeds dashboards, alerts, and periodic digests; answers questions from users
+Users can also query the platform conversationally — e.g., “What have we heard about competitor strategy or expansion plans in the last 90 days?” — and receive an answer compiled from graded intel with sources.
+6. Intelligence Classification — Trusted Intel vs. Rumour
+Every item carries a reliability grade, so users always know the weight to place on it. Grades combine the source's track record with how well the information is corroborated:
+Grade
+Label
+Meaning
+A
+Trusted / Confirmed
+From a reliable source and corroborated (website document, multiple independent reports, or direct first-hand knowledge)
+B
+Reliable
+From a source with a good track record; not yet independently corroborated
+C
+Unverified
+Plausible but single-source; needs corroboration before acting
+D
+Rumour
+Market talk / hearsay — logged because rumours matter, but clearly flagged as such
+The AI proposes a grade; designated curators can upgrade/downgrade based on judgement.
+Grades are dynamic, a rumour corroborated by two later reports is automatically flagged for upgrade.
+Dashboards weight and visually distinguish intel by grade, so rumours never masquerade as facts.
+7. Dashboards & Outputs
+For CEOs / JMD — Leadership dashboard — cross-business view: key developments, emerging risks and opportunities, competitor moves, high-grade intel of the week.
+For teams — Product & market views — intel filtered by product, segment, client, supplier, competitor, or geography.
+Real-time — Alerts — immediate notification when high-impact intel arrives (e.g., a major client issue, a competitor price action, a supply disruption).
+Periodic — Digests — AI-compiled weekly/monthly intelligence summaries per business, emailed automatically.
+On demand — Ask-the-platform — natural-language search across the full intel base with cited sources.
+8. Roles & Permissions
+Access is role-based and assigned per business/domain, so people see what is relevant and appropriate to them:
+Role
+Typical users
+Rights
+Main Contributor
+Sales & Marketing, Business Development, Procurement, Global Advisors, field teams
+Feed intel via any channel; view own submissions
+Curator / Analyst
+Designated MI owners per business
+Validate, edit, re-grade, merge, and enrich intel
+Viewer
+Managers and teams as per relevance
+View dashboards and intel within permitted scope
+Leadership
+JMD, Business CEOs
+Full cross-business visibility incl. sensitive intel
+Administrator
+Platform owner / IT
+User management, source lists, taxonomy, audit logs
+Sensitive intel (e.g., pricing strategy, M&A talk) can be restricted to defined circles.
+Every entry retains its contributor, timestamp, and edit history for accountability.
+9. Governance & Confidentiality
+A designated Market Intelligence (MI) owner per business drives adoption, curation quality, and source-list expansion.
+Clear ground rules on what may be captured, respecting confidentiality obligations to clients and suppliers and applicable data-protection norms.
+External web monitoring of approved list of legitimate, public, or duly-subscribed sources.
+Periodic review (quarterly) of intel quality, contribution levels, and dashboard usefulness by leadership. Present the designed part of Dashboard to Chintan Shivir & IBM level meetings.
+10. Phased Roadmap
+Phase
+Focus
+Key outcomes
+Tentative Timeline
+Phase 0 — Alignment
+This blueprint: leadership review and sign-off
+Approved scope
+12th August-26
+Phase 1 — Detailed design
+Inputs from businesses; taxonomy, workflows, permission matrix, source lists; platform approach selection
+Approved detailed design and platform decision
+Phase 2 — Pilot
+One business, core channels (WhatsApp, email, reports), AI pipeline, first dashboard, ~10-15 contributors
+Working pilot; learnings on quality and adoption
+Phase 3 — Rollout
+All businesses network; full dashboards, alerts, digests
+Company-wide MI platform in daily use
+Phase 4 — Automation+
+Automated web/import-export monitoring at scale; trend detection and predictive signals
+Human + machine intelligence, compounding over time
+Technology selection (platform, AI stack, WhatsApp/email integration) will be evaluated in Phase 1 after the framework is approved; this document deliberately remains platform-agnostic.
+11. How We Will Measure Success
+Contribution: number of intel items fed per week, per team, and per channel.
+Coverage: share of key products, clients, suppliers, and competitors with fresh intel.
+Quality: proportion of Grade A/B intel; rumours later confirmed or refuted.
+Usage: dashboard views, queries asked, digest readership by decision-makers.
+Impact: documented decisions (pricing, sourcing, client actions) influenced by platform intel.

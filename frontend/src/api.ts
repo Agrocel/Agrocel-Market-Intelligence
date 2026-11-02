@@ -38,6 +38,8 @@ export const getDataSourcesSummary = () => request<import('./types').DataSources
 export const getCompetitorDossiers = () => request<import('./types').CompetitorDossierSummary[]>('/competitors/dossiers');
 export const getCompetitorDossier = (competitorId: number) => request<import('./types').CompetitorDossierDetail>(`/competitors/${competitorId}/dossier`);
 export const getCompetitorPulse = () => request<import('./types').CompetitorPulseItem[]>('/competitors/pulse');
+export const getCompetitorExportRadar = (company: string = 'ARCHEAN') =>
+  request<import('./types').CompetitorExportRadarData>(`/competitors/export-radar?company=${encodeURIComponent(company)}`);
 export const getCompleteOverview = (frequency: 'monthly' | 'quarterly' | 'yearly' = 'monthly') =>
   request<import('./types').ExecutiveOverviewComplete>(`/dashboard/overview-complete?frequency=${frequency}`);
 
@@ -46,5 +48,22 @@ export const getSupplyIntelligence = () =>
 
 export const refreshSupplyIntelligence = () =>
   request<import('./types').Section2Supply>('/supply/refresh', { method: 'POST' });
+
+export const getArbitrageCockpit = (params?: {
+  cif_usd_mt?: number;
+  fx_rate?: number;
+  bcd_pct?: number;
+  port_handling_inr_kg?: number;
+  inland_freight_inr_kg?: number;
+}) => {
+  const q = new URLSearchParams();
+  if (params?.cif_usd_mt !== undefined) q.set('cif_usd_mt', String(params.cif_usd_mt));
+  if (params?.fx_rate !== undefined) q.set('fx_rate', String(params.fx_rate));
+  if (params?.bcd_pct !== undefined) q.set('bcd_pct', String(params.bcd_pct));
+  if (params?.port_handling_inr_kg !== undefined) q.set('port_handling_inr_kg', String(params.port_handling_inr_kg));
+  if (params?.inland_freight_inr_kg !== undefined) q.set('inland_freight_inr_kg', String(params.inland_freight_inr_kg));
+  const qs = q.toString() ? `?${q.toString()}` : '';
+  return request<import('./types').ArbitrageCockpitData>(`/pricing/arbitrage-cockpit${qs}`);
+};
 
 

@@ -53,6 +53,19 @@ export function ExecutiveHeader({ refreshed, currentRoute, onNavigate }: Props) 
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  useEffect(() => {
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return;
+      setMobileOpen(false);
+      setSupplyOpen(false);
+      setDemandOpen(false);
+      setDataOpen(false);
+      setAllModulesOpen(false);
+    };
+    document.addEventListener('keydown', handleEscape);
+    return () => document.removeEventListener('keydown', handleEscape);
+  }, []);
+
   const handleNav = (route: AppRoute, subTab?: string) => {
     onNavigate(route, subTab);
     setMobileOpen(false);
@@ -64,31 +77,31 @@ export function ExecutiveHeader({ refreshed, currentRoute, onNavigate }: Props) 
 
   const isSupplyActive = ['supply-capacity', 'production-operations', 'plant-outages'].includes(currentRoute);
   const isDemandActive = ['demand-intelligence', 'business-trade', 'trade-intelligence'].includes(currentRoute);
+  const isIntelligenceActive = ['competitor-intelligence', 'quarterly-report', 'forecasts-scenarios', 'news-developments', 'news-competitors', 'ask-intelligence'].includes(currentRoute);
 
   return (
     <header className={`executive-app-header ${compact ? 'compact' : ''}`}>
       {/* Brand Logo & Title */}
-      <a
-        className="brand"
-        href="#/overview"
-        aria-label="Agrocel Market Intelligence home"
-        onClick={e => {
-          e.preventDefault();
-          handleNav('overview');
-        }}
-      >
-        <img src="/brand/agrocel-logo.png" alt="Agrocel Industries Pvt Ltd" />
-        <span className="brand-title">
-          <b>Market Intelligence</b>
-          <small>Bromine decision desk</small>
-        </span>
-      </a>
+      <div className="header-brand-group">
+        <a
+          className="brand"
+          href="#/overview"
+          aria-label="Agrocel Market Intelligence home"
+          onClick={e => {
+            e.preventDefault();
+            handleNav('overview');
+          }}
+        >
+          <img src="/brand/agrocel-logo.png" alt="Agrocel Industries Pvt Ltd" />
+          <span className="brand-title">
+            <b>Market Intelligence</b>
+            <small>Bromine Decision Desk</small>
+          </span>
+        </a>
+      </div>
 
-      <span className="product-tag">Bromine Pilot</span>
-
-      {/* Primary 12-Module Executive Navigation */}
+      {/* Primary Executive Navigation */}
       <nav className={`primary-nav-bar ${mobileOpen ? 'open' : ''}`} role="navigation">
-        {/* 01. Overview */}
         <button
           className={`nav-tab-btn ${currentRoute === 'overview' ? 'active' : ''}`}
           onClick={() => handleNav('overview')}
@@ -96,7 +109,6 @@ export function ExecutiveHeader({ refreshed, currentRoute, onNavigate }: Props) 
           Overview
         </button>
 
-        {/* 02. Price Intelligence */}
         <button
           className={`nav-tab-btn ${currentRoute === 'price-intelligence' || currentRoute === 'market-intelligence' ? 'active' : ''}`}
           onClick={() => handleNav('price-intelligence')}
@@ -104,44 +116,15 @@ export function ExecutiveHeader({ refreshed, currentRoute, onNavigate }: Props) 
           Pricing
         </button>
 
-        {/* 03 & 06 & 07. Supply & Operations Dropdown */}
-        <div className="nav-dropdown-item" ref={supplyMenuRef}>
-          <button
-            className={`nav-tab-btn dropdown-btn ${isSupplyActive ? 'active' : ''}`}
-            onClick={() => setSupplyOpen(!supplyOpen)}
-            aria-expanded={supplyOpen}
-          >
-            <span>Supply & Ops</span>
-            <span className="nav-caret">{supplyOpen ? '▲' : '▾'}</span>
-          </button>
-          {supplyOpen && (
-            <div className="nav-dropdown-menu">
-              <button
-                className={`dropdown-sub-btn ${currentRoute === 'supply-capacity' ? 'active' : ''}`}
-                onClick={() => handleNav('supply-capacity')}
-              >
-                <strong>03. Supply & Global Capacity</strong>
-                <small>685k baseline, country dossiers & utilization</small>
-              </button>
-              <button
-                className={`dropdown-sub-btn ${currentRoute === 'production-operations' ? 'active' : ''}`}
-                onClick={() => handleNav('production-operations')}
-              >
-                <strong>06. Production & Operations</strong>
-                <small>Agrocel Kutch runs, solar bitterns & monsoon buffer</small>
-              </button>
-              <button
-                className={`dropdown-sub-btn ${currentRoute === 'plant-outages' ? 'active' : ''}`}
-                onClick={() => handleNav('plant-outages')}
-              >
-                <strong>07. Plant Outages & Disruptions</strong>
-                <small>Shandong audits, Red Sea bypass & timelines</small>
-              </button>
-            </div>
-          )}
-        </div>
+        {/* Supply Intelligence Tab (Single Unified Command Center) */}
+        <button
+          className={`nav-tab-btn ${isSupplyActive ? 'active' : ''}`}
+          onClick={() => handleNav('supply-capacity')}
+        >
+          Supply
+        </button>
 
-        {/* 04 & 05. Demand & Trade Dropdown */}
+        {/* Demand & Trade Dropdown */}
         <div className="nav-dropdown-item" ref={demandMenuRef}>
           <button
             className={`nav-tab-btn dropdown-btn ${isDemandActive ? 'active' : ''}`}
@@ -157,75 +140,69 @@ export function ExecutiveHeader({ refreshed, currentRoute, onNavigate }: Props) 
                 className={`dropdown-sub-btn ${currentRoute === 'demand-intelligence' ? 'active' : ''}`}
                 onClick={() => handleNav('demand-intelligence')}
               >
-                <strong>04. Demand Intelligence</strong>
-                <small>Flame retardants, agrochem & API synthesis</small>
+                <strong>Demand Intelligence</strong>
+                <small>Downstream synthesis, domestic end-use sectors</small>
               </button>
               <button
                 className={`dropdown-sub-btn ${currentRoute === 'business-trade' || currentRoute === 'trade-intelligence' ? 'active' : ''}`}
                 onClick={() => handleNav('business-trade')}
               >
-                <strong>05. Global Trade Intelligence</strong>
-                <small>OEC HS 280130, customs bills & Indian flows</small>
+                <strong>Global Trade Intelligence</strong>
+                <small>Customs trade flows, bilateral port rankings</small>
               </button>
             </div>
           )}
         </div>
 
-        {/* 08. Competitors */}
-        <button
-          className={`nav-tab-btn ${currentRoute === 'competitor-intelligence' ? 'active' : ''}`}
-          onClick={() => handleNav('competitor-intelligence')}
-        >
-          Competitors
-        </button>
+        {/* Intelligence Dropdown (Direct Access to Competitor Intelligence) */}
+        <div className="nav-dropdown-item" ref={allModulesRef}>
+          <button
+            className={`nav-tab-btn dropdown-btn ${isIntelligenceActive ? 'active' : ''}`}
+            onClick={() => setAllModulesOpen(!allModulesOpen)}
+            aria-expanded={allModulesOpen}
+          >
+            <span>Intelligence</span>
+            <span className="nav-caret">{allModulesOpen ? '▲' : '▾'}</span>
+          </button>
+          {allModulesOpen && (
+            <div className="nav-dropdown-menu nav-dropdown-menu-wide">
+              <button className={`dropdown-sub-btn ${currentRoute === 'competitor-intelligence' ? 'active' : ''}`} onClick={() => handleNav('competitor-intelligence')}>
+                <strong>Competitor Intelligence</strong>
+                <small>Financial dossiers, peer benchmarker, and concall takeaways</small>
+              </button>
+              <button className={`dropdown-sub-btn ${currentRoute === 'news-developments' || currentRoute === 'news-competitors' ? 'active' : ''}`} onClick={() => handleNav('news-developments')}>
+                <strong>Market Developments</strong>
+                <small>Verified news, competitor moves, and event tracking</small>
+              </button>
+              <button className={`dropdown-sub-btn ${currentRoute === 'quarterly-report' ? 'active' : ''}`} onClick={() => handleNav('quarterly-report')}>
+                <strong>Quarterly Report</strong>
+                <small>Management briefing and priority watchlist</small>
+              </button>
+              <button className={`dropdown-sub-btn ${currentRoute === 'forecasts-scenarios' ? 'active' : ''}`} onClick={() => handleNav('forecasts-scenarios')}>
+                <strong>Forecasts & Scenarios</strong>
+                <small>Forward outlook and commercial stress tests</small>
+              </button>
+              <button className={`dropdown-sub-btn ${currentRoute === 'ask-intelligence' ? 'active' : ''}`} onClick={() => handleNav('ask-intelligence')}>
+                <strong>Ask Intelligence</strong>
+                <small>Evidence-backed answers from internal and market sources</small>
+              </button>
+            </div>
+          )}
+        </div>
 
-        {/* 09. Quarterly Report */}
-        <button
-          className={`nav-tab-btn ${currentRoute === 'quarterly-report' ? 'active' : ''}`}
-          onClick={() => handleNav('quarterly-report')}
-        >
-          Quarterly Report
-        </button>
-
-        {/* 10. Forecasts & Scenarios */}
-        <button
-          className={`nav-tab-btn ${currentRoute === 'forecasts-scenarios' ? 'active' : ''}`}
-          onClick={() => handleNav('forecasts-scenarios')}
-        >
-          Forecasts
-        </button>
-
-        {/* 11. News & Market Developments */}
-        <button
-          className={`nav-tab-btn ${currentRoute === 'news-developments' || currentRoute === 'news-competitors' ? 'active' : ''}`}
-          onClick={() => handleNav('news-developments')}
-        >
-          News
-        </button>
-
-        {/* 12. Ask Intelligence */}
-        <button
-          className={`nav-tab-btn ${currentRoute === 'ask-intelligence' ? 'active' : ''}`}
-          onClick={() => handleNav('ask-intelligence')}
-        >
-          Ask AI
-        </button>
-
-        {/* Mobile Directory of all 12 modules */}
+        {/* Mobile Directory */}
         <div className="mobile-data-links">
-          <div className="mobile-section-label">MARKET INTELLIGENCE DIRECTORY</div>
-          <button className="nav-tab-btn" onClick={() => handleNav('overview')}>01. Executive Overview</button>
-          <button className="nav-tab-btn" onClick={() => handleNav('price-intelligence')}>02. Price Intelligence</button>
-          <button className="nav-tab-btn" onClick={() => handleNav('supply-capacity')}>03. Supply & Global Capacity</button>
-          <button className="nav-tab-btn" onClick={() => handleNav('demand-intelligence')}>04. Demand Intelligence</button>
-          <button className="nav-tab-btn" onClick={() => handleNav('business-trade')}>05. Global Trade Intelligence</button>
-          <button className="nav-tab-btn" onClick={() => handleNav('production-operations')}>06. Production & Operations</button>
-          <button className="nav-tab-btn" onClick={() => handleNav('plant-outages')}>07. Plant Outages & Disruptions</button>
-          <button className="nav-tab-btn" onClick={() => handleNav('competitor-intelligence')}>08. Competitor Intelligence</button>
-          <button className="nav-tab-btn" onClick={() => handleNav('quarterly-report')}>09. Quarterly Intelligence Report</button>
-          <button className="nav-tab-btn" onClick={() => handleNav('forecasts-scenarios')}>10. Forecasts & Scenarios</button>
-          <button className="nav-tab-btn" onClick={() => handleNav('news-developments')}>11. News & Market Developments</button>
-          <button className="nav-tab-btn" onClick={() => handleNav('ask-intelligence')}>12. Ask Market Intelligence</button>
+          <div className="mobile-section-label">MARKET INTELLIGENCE MODULES</div>
+          <button className="nav-tab-btn" onClick={() => handleNav('overview')}>Executive Overview</button>
+          <button className="nav-tab-btn" onClick={() => handleNav('price-intelligence')}>Price Intelligence</button>
+          <button className="nav-tab-btn" onClick={() => handleNav('supply-capacity')}>Supply Intelligence</button>
+          <button className="nav-tab-btn" onClick={() => handleNav('demand-intelligence')}>Demand Intelligence</button>
+          <button className="nav-tab-btn" onClick={() => handleNav('business-trade')}>Global Trade Intelligence</button>
+          <button className="nav-tab-btn" onClick={() => handleNav('competitor-intelligence')}>Competitor Intelligence</button>
+          <button className="nav-tab-btn" onClick={() => handleNav('quarterly-report')}>Quarterly Report</button>
+          <button className="nav-tab-btn" onClick={() => handleNav('forecasts-scenarios')}>Forecasts & Scenarios</button>
+          <button className="nav-tab-btn" onClick={() => handleNav('news-developments')}>News & Market Developments</button>
+          <button className="nav-tab-btn" onClick={() => handleNav('ask-intelligence')}>Ask Intelligence</button>
           <button className="nav-tab-btn mt-2" onClick={() => handleNav('data-coverage')}>📊 Data Coverage & Provenance</button>
         </div>
       </nav>

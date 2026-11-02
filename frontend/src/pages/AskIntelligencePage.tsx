@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { askQuestion } from '../api';
 import type { ChatResponse } from '../types';
 import { SourceCitation } from '../components/Common';
+import { PageHeader, IntelligenceStatusStrip } from '../components/PageHeader';
 
 const PROMPT_SUGGESTIONS = [
   {
@@ -65,31 +66,39 @@ export function AskIntelligencePage() {
 
   return (
     <div className="page-shell ask-intelligence-page">
-      {/* Page Header */}
-      <header className="ask-intel-header">
-        <div className="ask-intel-intro">
-          <div className="ai-brand-badge">
-            <span className="ai-dot-pulse" />
-            <span>AI Decision Support</span>
-          </div>
-          <h1 className="ask-page-title">Ask Market Intelligence</h1>
-          <p className="ask-page-subtitle">
-            Ask natural language questions across Agrocel confidential sales data, Indian customs trade records, global market reports, competitor filings, and verified external news.
-          </p>
-        </div>
+      {/* Level 1 — Page Header */}
+      <PageHeader
+        breadcrumb={
+          <span className="elh-breadcrumb">
+            <span className="breadcrumb-current">AI Decision Support</span>
+          </span>
+        }
+        title="Ask Market Intelligence"
+      />
 
-        {/* Scope Indicators */}
-        <div className="connected-scope-banner">
-          <span className="scope-title">Connected Grounded Scope:</span>
-          <div className="scope-tags-list">
-            <span className="scope-tag">🏛️ Agrocel Sales ERP (100% Audited)</span>
-            <span className="scope-tag">🚢 Indian Customs Port Manifests</span>
-            <span className="scope-tag">📈 China Daily Spot Benchmark</span>
-            <span className="scope-tag">📄 56 Richard Market Reports (Vector Indexed)</span>
-            <span className="scope-tag">📰 GDELT & Chemical News Feeds</span>
-          </div>
-        </div>
-      </header>
+      {/* Level 2 — Intelligence Status */}
+      <IntelligenceStatusStrip
+        items={[
+          {
+            label: 'Decision Engine',
+            value: 'Grounded AI Assistant',
+            dot: 'green',
+            tone: 'positive'
+          },
+          {
+            label: 'Connected Scope',
+            value: 'Agrocel Sales ERP · Customs Manifests · Spot Indices'
+          },
+          {
+            label: 'Vector Library',
+            value: '56 Market Reports Indexed'
+          },
+          {
+            label: 'Audit Standard',
+            value: 'Evidence Citations Required'
+          }
+        ]}
+      />
 
       {/* Suggested Questions Grid */}
       <section className="suggested-prompts-section">

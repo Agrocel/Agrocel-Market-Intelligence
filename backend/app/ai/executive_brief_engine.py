@@ -960,9 +960,9 @@ def generate_deterministic_brief_data(metrics: Dict[str, Any], doc_evidence: Lis
                     "verified_sources_count": len(doc_evidence) + 4,
                     "records_analyzed_count": metrics.get("total_records_analyzed", 11099),
                     "comparison": {
-                        "china_price_change_pct": cp["change_pct"],
-                        "india_export_change_pct": it["export_change_pct"],
-                        "agrocel_sales_change_pct": ag["sales_change_pct"]
+                        "china_price_change_pct": cp.get("change_pct", 0.0),
+                        "india_export_change_pct": it.get("export_change_pct", 0.0),
+                        "agrocel_sales_change_pct": ag.get("sales_change_pct", 0.0)
                     }
                 })
             },
@@ -1026,12 +1026,12 @@ def generate_deterministic_brief_data(metrics: Dict[str, Any], doc_evidence: Lis
                 "display_order": 4,
                 "confidence_level": "HIGH",
                 "content": json.dumps({
-                    "china_spot_usd_mt": cp["current_usd_mt"],
-                    "china_30d_avg_usd_mt": cp["avg_30d_usd_mt"],
-                    "india_exports_mt": it["export_qty_mt"],
-                    "india_imports_mt": it["import_qty_mt"],
-                    "agrocel_sales_mt": ag["sales_qty_mt"],
-                    "agrocel_realization_inr_per_mt": ag["realization_inr_per_mt"],
+                    "china_spot_usd_mt": cp.get("current_usd_mt", 0.0),
+                    "china_30d_avg_usd_mt": cp.get("avg_30d_usd_mt", cp.get("current_usd_mt", 0.0)),
+                    "india_exports_mt": it.get("export_qty_mt", 0.0),
+                    "india_imports_mt": it.get("import_qty_mt", 0.0),
+                    "agrocel_sales_mt": ag.get("sales_qty_mt", 0.0),
+                    "agrocel_realization_inr_per_mt": ag.get("realization_inr_per_mt", 0.0),
                     "units": {"prices": "USD / MT", "trade": "MT", "sales": "MT", "realization": "INR / MT"}
                 })
             },
@@ -1158,25 +1158,25 @@ def generate_deterministic_brief_data(metrics: Dict[str, Any], doc_evidence: Lis
         ],
         "citations": [
             {
-                "citation_text": f"China spot benchmark recorded at {price_display} on {cp['date']} ({cp.get('source', 'China Price Data.xlsx')})",
+                "citation_text": f"China spot benchmark recorded at {price_display} on {cp.get('date', str(date.today()))} ({cp.get('source', 'China Price Data.xlsx')})",
                 "source_title": f"China Bromine Spot Benchmark ({cp.get('source', 'China Price Data.xlsx')})",
                 "source_url_or_file": "Data/Raw/CHINA-PRICE/China Price Data.xlsx",
                 "reliability_grade": "B",
-                "published_at": cp["date"]
+                "published_at": str(cp.get("date", date.today()))
             },
             {
                 "citation_text": f"India customs cumulative exports reached {it['export_qty_mt']:,.1f} MT (${it['export_val_usd']:,.0f} value)",
                 "source_title": "Indian Customs Trade Declarations (HS 28018010/20)",
                 "source_url_or_file": "Data/Raw/Imports_Exports_2023-24.xlsx",
                 "reliability_grade": "A",
-                "published_at": str(metrics["period_end"])
+                "published_at": str(metrics.get("period_end", date.today()))
             },
             {
                 "citation_text": f"Agrocel domestic realization averaged INR {ag['realization_inr_per_mt']:,.0f}/MT across {ag['sales_qty_mt']:,.1f} MT commercial deliveries",
                 "source_title": "Agrocel Commercial Sales Records (Confidential)",
                 "source_url_or_file": "Data/Raw/Solaris Sales.xlsx",
                 "reliability_grade": "A",
-                "published_at": str(metrics["period_end"])
+                "published_at": str(metrics.get("period_end", date.today()))
             },
             {
                 "citation_text": doc_hit1.get("text", "")[:240],
@@ -1184,7 +1184,7 @@ def generate_deterministic_brief_data(metrics: Dict[str, Any], doc_evidence: Lis
                 "source_url_or_file": doc_hit1.get("source_file", "Data/Raw/Richard Reports/"),
                 "page_number": doc_hit1.get("page_number", 1),
                 "reliability_grade": "B",
-                "published_at": str(metrics["period_end"])
+                "published_at": str(metrics.get("period_end", date.today()))
             },
             {
                 "citation_text": doc_hit2.get("text", "")[:240],
@@ -1192,7 +1192,7 @@ def generate_deterministic_brief_data(metrics: Dict[str, Any], doc_evidence: Lis
                 "source_url_or_file": doc_hit2.get("source_file", "Data/Raw/Richard Reports/"),
                 "page_number": doc_hit2.get("page_number", 2),
                 "reliability_grade": "B",
-                "published_at": str(metrics["period_end"])
+                "published_at": str(metrics.get("period_end", date.today()))
             }
         ] + [
             {

@@ -8,6 +8,7 @@ import {
   type RankingBarItem
 } from '../components/Charts';
 import { EmptyState } from '../components/Common';
+import { PageHeader, IntelligenceStatusStrip, SectionNav } from '../components/PageHeader';
 import {
   formatCompact,
   formatUSD,
@@ -242,42 +243,92 @@ export function BusinessTradePage({
       {/* ===================================================================== */}
       {/* PAGE HEADER & PRIMARY TABS                                            */}
       {/* ===================================================================== */}
-      <header className="subpage-header">
-        <div className="subpage-title-row">
-          <div>
-            <p className="eyebrow">Commercial Desk & Customs Manifests</p>
-            <h1 className="subpage-title">Business & Trade</h1>
-          </div>
-        </div>
+      {/* Level 1 — Page Header */}
+      <PageHeader
+        title="Commercial Business & Trade Intelligence"
+      />
 
-        {/* Primary Navigation Tabs */}
-        <div className="secondary-nav-tabs" role="tablist">
-          <button
-            className={`subtab-btn ${tab === 'agrocel' ? 'active' : ''}`}
-            onClick={() => handleMainTabClick('agrocel')}
-            role="tab"
-            aria-selected={tab === 'agrocel'}
-          >
-            🏛️ Agrocel Business
-          </button>
-          <button
-            className={`subtab-btn ${tab === 'trade' ? 'active' : ''}`}
-            onClick={() => handleMainTabClick('trade')}
-            role="tab"
-            aria-selected={tab === 'trade'}
-          >
-            🚢 India Trade
-          </button>
-          <button
-            className={`subtab-btn ${tab === 'comparison' ? 'active' : ''}`}
-            onClick={() => handleMainTabClick('comparison')}
-            role="tab"
-            aria-selected={tab === 'comparison'}
-          >
-            ⚖️ Market Comparison
-          </button>
-        </div>
-      </header>
+      {/* Level 2 — Intelligence Status */}
+      <IntelligenceStatusStrip
+        items={
+          tab === 'agrocel'
+            ? [
+                {
+                  label: 'Sales Volume',
+                  value: formatMT(totalSalesQty),
+                  dot: 'blue'
+                },
+                {
+                  label: 'Commercial Revenue',
+                  value: formatCompact(totalSalesRev, '₹')
+                },
+                {
+                  label: 'Weighted Realization',
+                  value: formatRate(weightedRealization),
+                  tone: 'positive'
+                },
+                {
+                  label: 'Invoiced Accounts',
+                  value: `${activeCustomerCount} Accounts`
+                }
+              ]
+            : tab === 'trade'
+            ? [
+                {
+                  label: 'Total Indian Imports',
+                  value: formatMT(tradeKPIs.importQty),
+                  dot: 'amber',
+                  tone: 'warning'
+                },
+                {
+                  label: 'Total Indian Exports',
+                  value: formatMT(tradeKPIs.exportQty)
+                },
+                {
+                  label: 'Avg Import Price',
+                  value: `${formatUSD(tradeKPIs.avgImportPrice)}/MT`
+                },
+                {
+                  label: 'Net Balance',
+                  value: `${formatMT(tradeKPIs.netFlowQty)} (${tradeKPIs.netFlowQty < 0 ? 'Net Deficit' : 'Surplus'})`,
+                  tone: tradeKPIs.netFlowQty < 0 ? 'critical' : 'positive'
+                }
+              ]
+            : [
+                {
+                  label: 'Comparison Horizon',
+                  value: 'Unified Active Period',
+                  dot: 'green'
+                },
+                {
+                  label: 'Agrocel Realization',
+                  value: '₹195.7/kg ($2,343/MT eq)',
+                  tone: 'positive'
+                },
+                {
+                  label: 'Landed CIF Parity',
+                  value: '$3,048/MT (₹254.5/kg eq)'
+                },
+                {
+                  label: 'Domestic Protection Cushion',
+                  value: '+₹58.8/kg (+30.1% discount)',
+                  tone: 'positive'
+                }
+              ]
+        }
+      />
+
+      {/* Level 3 — Section Navigation */}
+      <SectionNav
+        items={[
+          { id: 'agrocel', label: 'Agrocel Commercial Operations' },
+          { id: 'trade', label: 'Indian Port Trade Manifests' },
+          { id: 'comparison', label: 'Domestic vs Landed Parity' }
+        ]}
+        activeId={tab}
+        onSelect={id => handleMainTabClick(id as MainTab)}
+        ariaLabel="Business & Trade Navigation"
+      />
 
       {/* ===================================================================== */}
       {/* TAB 1: AGROCEL BUSINESS                                               */}
@@ -370,7 +421,6 @@ export function BusinessTradePage({
                       { key: 'quantity_mt', name: 'Sales Volume (MT)', color: '#1d4ed8', kind: 'bar' },
                       { key: 'revenue_inr', name: 'Revenue (INR)', color: '#0f766e', axis: 'right' }
                     ]}
-                    annotation="Monthly physical dispatch volumes plotted against gross commercial billing amounts."
                   />
                   <TrendChart
                     title="Commercial Pricing Health: Basic Rate vs Net Realization (NSR)"
@@ -380,7 +430,6 @@ export function BusinessTradePage({
                       { key: 'weighted_basic_rate_kg', name: 'Basic Rate (₹/kg)', color: '#d97706' },
                       { key: 'weighted_net_realization_kg', name: 'Net Realization NSR (₹/kg)', color: '#0f766e' }
                     ]}
-                    annotation="Weighted contract rate vs net realization per kg. Compares pricing discipline against post-discount yields."
                   />
                 </div>
               ) : (
@@ -419,7 +468,6 @@ export function BusinessTradePage({
               <div className="chart-grid">
                 <HorizontalRankingBarList
                   title="Ranked Regional Performance"
-                  subtitle="Regions normalized from invoice state and supply zone manifests"
                   barColor="#1d4ed8"
                   items={regionalData.map(r => ({
                     label: r.normalizedRegion,
@@ -601,7 +649,6 @@ export function BusinessTradePage({
                 {/* Ranked Customer Bar List */}
                 <HorizontalRankingBarList
                   title={`Top Customers (${customerMetric === 'revenue' ? 'by Commercial Revenue' : 'by Sales Volume'})`}
-                  subtitle="Directly aggregated from internal billing manifests"
                   barColor={customerMetric === 'revenue' ? '#0f766e' : '#1d4ed8'}
                   selectedItem={selectedCustomer || undefined}
                   onItemClick={item => setSelectedCustomer(item.label === selectedCustomer ? null : item.label)}
@@ -621,7 +668,6 @@ export function BusinessTradePage({
                 {/* Customer Segment Distribution Donut */}
                 <SegmentDonutChart
                   title="Customer Segment Revenue Mix"
-                  subtitle="Revenue distribution by business segment"
                   data={segmentDistribution.map(s => ({
                     name: s.segment,
                     value: s.revenue_inr,
@@ -830,7 +876,6 @@ export function BusinessTradePage({
                       { key: 'import_qty_mt', name: 'Import Qty MT', color: '#1d4ed8', kind: 'bar' },
                       { key: 'import_avg_price', name: 'Avg Import Price (USD/MT)', color: '#be123c', axis: 'right' }
                     ]}
-                    annotation="Monthly inbound maritime shipments cleared through Indian customs with weighted CIF prices."
                   />
 
                   {/* Export from India: Quantity MT & Realization Price (Directly inspired by Reference Screenshot 1) */}
@@ -842,7 +887,6 @@ export function BusinessTradePage({
                       { key: 'export_qty_mt', name: 'Export Qty MT', color: '#0f766e', kind: 'bar' },
                       { key: 'export_avg_price', name: 'Avg Export Price (USD/MT)', color: '#d97706', axis: 'right' }
                     ]}
-                    annotation="Monthly outbound shipments from Indian ports with weighted export price realization."
                   />
 
                   {/* Monthly Trade Valuation Trend */}
@@ -854,7 +898,6 @@ export function BusinessTradePage({
                       { key: 'import_value_usd', name: 'Import Value (USD)', color: '#1d4ed8', kind: 'bar' },
                       { key: 'export_value_usd', name: 'Export Value (USD)', color: '#0f766e', kind: 'bar' }
                     ]}
-                    annotation="Monthly declared customs freight valuation across inbound and outbound cargo."
                   />
 
                   {/* Net Trade Flow (Export - Import) */}
@@ -897,7 +940,6 @@ export function BusinessTradePage({
                 {/* Top Export Destinations */}
                 <HorizontalRankingBarList
                   title="Top Export Destination Countries"
-                  subtitle="Ranked by total outbound volume shipped from India"
                   barColor="#0f766e"
                   selectedItem={drilldownCountry}
                   onItemClick={item => setDrilldownCountry(item.label)}
@@ -913,7 +955,6 @@ export function BusinessTradePage({
                 {/* Top Import Origins */}
                 <HorizontalRankingBarList
                   title="Top Import Origin Countries"
-                  subtitle="Ranked by total inbound volume cleared into India"
                   barColor="#1d4ed8"
                   selectedItem={drilldownCountry}
                   onItemClick={item => setDrilldownCountry(item.label)}
@@ -954,7 +995,6 @@ export function BusinessTradePage({
                 {/* Top Indian Ports */}
                 <HorizontalRankingBarList
                   title="Top Indian Ports of Clearance"
-                  subtitle="Ranked by total metric tons cleared through port customs"
                   barColor="#315c8d"
                   items={portSummary.slice(0, 8).map(p => ({
                     label: p.port,

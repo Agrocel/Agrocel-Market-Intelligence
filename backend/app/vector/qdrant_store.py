@@ -14,23 +14,44 @@ from .embedding_provider import get_embedding_provider, BaseEmbeddingProvider
 COLLECTION_NAME = "bromine_intelligence_documents"
 DEFAULT_STORAGE_DIR = Path(__file__).resolve().parents[3] / "Data" / "qdrant_storage"
 
+_shared_client: Optional[QdrantClient] = None
+_shared_client_path: Optional[str] = None
+
+def get_shared_qdrant_client(storage_path: Optional[Path] = None) -> Optional[QdrantClient]:
+    """Returns a process-wide shared QdrantClient instance for local embedded storage.
+
+    Qdrant embedded storage places an exclusive OS lock on the storage directory.
+    Sharing a single client instance within the process prevents 'Storage folder is already accessed' errors.
+    """
+    global _shared_client, _shared_client_path
+    if not HAS_QDRANT or QdrantClient is None:
+        return None
+
+    target_path = (storage_path or DEFAULT_STORAGE_DIR).resolve()
+    path_str = str(target_path)
+
+    if _shared_client is not None and _shared_client_path == path_str:
+        return _shared_client
+
+    try:
+        target_path.mkdir(parents=True, exist_ok=True)
+        _shared_client = QdrantClient(path=path_str)
+        _shared_client_path = path_str
+        return _shared_client
+    except Exception as e:
+        import logging
+        logging.getLogger(__name__).warning(f"Qdrant file storage locked or unavailable: {e}")
+        return None
+
 class QdrantStore:
     def __init__(self, storage_path: Optional[Path] = None, embedding_provider: Optional[BaseEmbeddingProvider] = None):
         self.storage_path = storage_path or DEFAULT_STORAGE_DIR
-        self.storage_path.mkdir(parents=True, exist_ok=True)
         self.embedding_provider = embedding_provider or get_embedding_provider()
         self.dimension = self.embedding_provider.dimension
         self.collection_name = COLLECTION_NAME
-        self.client = None
-        if not HAS_QDRANT or QdrantClient is None:
-            return
-        try:
-            self.client = QdrantClient(path=str(self.storage_path))
+        self.client = get_shared_qdrant_client(self.storage_path)
+        if self.client is not None:
             self.ensure_collection()
-        except Exception as e:
-            import logging
-            logging.getLogger(__name__).warning(f"Qdrant file storage locked by concurrent process: {e}")
-            self.client = None
 
     def ensure_collection(self):
         if self.client is None:
@@ -62,7 +83,7 @@ class QdrantStore:
           "geography": str | None
         }
         """
-        if not chunks:
+        if not chunks or self.client is None:
             return 0
             
         points = []

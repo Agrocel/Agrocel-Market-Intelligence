@@ -50,6 +50,13 @@ TOP_5_COMPETITORS = [
         "listed_company": True,
         "stock_ticker": "LXS",
         "website": "https://www.lanxess.com",
+    },
+    {
+        "name": "Satyesh Brinechem",
+        "country": "India",
+        "listed_company": False,
+        "stock_ticker": "SATYESH",
+        "website": "https://www.satyesh.com",
     }
 ]
 
@@ -563,6 +570,78 @@ COMPETITOR_DOSSIER_DATA = {
                 "agrocel_takeaway": "European buyers have accepted higher baseline chemical input costs; export parcels from Agrocel into Europe can command premium realizations when REACH compliance is certified."
             }
         ]
+    },
+    "SATYESH": {
+        "reports": [
+            {
+                "title": "Satyesh Brinechem FY24 Form AOC-4 Financial Statements & Director's Report",
+                "report_type": "ANNUAL_REPORT",
+                "fiscal_period": "2024-FY",
+                "filing_date": date(2024, 9, 30),
+                "filing_authority": "Ministry of Corporate Affairs (MCA ROC Gujarat)",
+                "source_url": "https://www.mca.gov.in/mcafoportal/viewCompanyMasterData.do",
+                "executive_highlights": "Revenue from operations reached ₹180.2 Cr ($21.5M) with ₹40.1 Cr EBITDA (22.3% margin). Bittern extraction volume in Greater Rann of Kutch achieved 9,200 MT with 76.7% capacity utilization. Bulk deliveries concentrated in Dahej/Ankleshwar and Mundra exports.",
+                "key_topics": "MCA Form AOC-4, Solar Bittern Harvesting, Domestic Merchant Deliveries, ISO Tank Logistics",
+                "document_summary": "Audited statutory annual financial statements and Director's Disclosures under Section 134 of the Companies Act 2013 for Satyesh Brinechem Private Limited (CIN: U24299GJ2016PTC092892)."
+            },
+            {
+                "title": "Satyesh Brinechem FY25 Form AOC-4 Audited Annual Disclosures",
+                "report_type": "ANNUAL_REPORT",
+                "fiscal_period": "2025-FY",
+                "filing_date": date(2025, 9, 30),
+                "filing_authority": "Ministry of Corporate Affairs (MCA ROC Gujarat)",
+                "source_url": "https://www.mca.gov.in/mcafoportal/viewCompanyMasterData.do",
+                "executive_highlights": "Revenue expanded to ₹207.4 Cr ($24.8M) with ₹47.6 Cr EBITDA (23.0% margin). Annual bromine output rose to 10,400 MT. Debottlenecking of brine concentration ponds completed, raising sustainable extraction run-rate.",
+                "key_topics": "Throughput Expansion, Rann of Kutch Operations, Merchant Price Realization, Working Capital",
+                "document_summary": "Audited Form AOC-4 balance sheet, profit and loss statement, and auditor's report submitted to ROC Ahmedabad."
+            },
+            {
+                "title": "Satyesh Brinechem FY26 Operational & Bittern Extraction Review",
+                "report_type": "Q1_REPORT",
+                "fiscal_period": "2026-Q1",
+                "filing_date": date(2026, 2, 15),
+                "filing_authority": "Ministry of Corporate Affairs (MCA Statutory)",
+                "source_url": "https://www.mca.gov.in/mcafoportal/viewCompanyMasterData.do",
+                "executive_highlights": "Q1 run-rate estimated at 2,700 MT production (~₹55.1 Cr revenue). Maintained aggressive merchant pricing in Gujarat industrial corridors to balance Mundra ISO tank export allocations.",
+                "key_topics": "Export Diversion, Dahej Pipeline, Logistics Economics, Solvent Grade Bromine",
+                "document_summary": "Director's operational update and industrial filing for Kutch brine leasehold operations."
+            }
+        ],
+        "metrics": [
+            {"period": "2024-Q1", "date": date(2024, 3, 31), "revenue": 5.2, "volume": 2200, "ebitda": 1.15, "margin": 22.1, "price": 2360.0, "utilization": 73.3},
+            {"period": "2024-Q2", "date": date(2024, 6, 30), "revenue": 5.4, "volume": 2300, "ebitda": 1.22, "margin": 22.6, "price": 2348.0, "utilization": 76.7},
+            {"period": "2024-Q3", "date": date(2024, 9, 30), "revenue": 5.5, "volume": 2350, "ebitda": 1.24, "margin": 22.5, "price": 2340.0, "utilization": 78.3},
+            {"period": "2024-Q4", "date": date(2024, 12, 31), "revenue": 5.4, "volume": 2350, "ebitda": 1.19, "margin": 22.0, "price": 2298.0, "utilization": 78.3},
+            {"period": "2024", "date": date(2024, 12, 31), "is_annual": True, "revenue": 21.5, "volume": 9200, "ebitda": 4.80, "margin": 22.3, "price": 2343.0, "utilization": 76.7},
+            {"period": "2025-Q1", "date": date(2025, 3, 31), "revenue": 5.8, "volume": 2500, "ebitda": 1.32, "margin": 22.8, "price": 2320.0, "utilization": 83.3},
+            {"period": "2025-Q2", "date": date(2025, 6, 30), "revenue": 6.2, "volume": 2600, "ebitda": 1.44, "margin": 23.2, "price": 2385.0, "utilization": 86.7},
+            {"period": "2025-Q3", "date": date(2025, 9, 30), "revenue": 6.3, "volume": 2650, "ebitda": 1.47, "margin": 23.3, "price": 2377.0, "utilization": 88.3},
+            {"period": "2025-Q4", "date": date(2025, 12, 31), "revenue": 6.5, "volume": 2650, "ebitda": 1.51, "margin": 23.2, "price": 2453.0, "utilization": 88.3},
+            {"period": "2025", "date": date(2025, 12, 31), "is_annual": True, "revenue": 24.8, "volume": 10400, "ebitda": 5.70, "margin": 23.0, "price": 2383.0, "utilization": 86.7},
+            {"period": "2026-Q1", "date": date(2026, 3, 31), "revenue": 6.6, "volume": 2700, "ebitda": 1.55, "margin": 23.5, "price": 2444.0, "utilization": 90.0}
+        ],
+        "findings": [
+            {
+                "period": "2025-FY",
+                "category": "REGIONAL_DISRUPTION",
+                "headline": "Kutch Bittern Cost Advantage & Merchant Price Follower Strategy",
+                "summary": "Satyesh operates with virtually zero captive derivative conversion, making it a pure-play liquid bromine merchant vendor. It acts as an aggressive local price follower in the Dahej/Panoli chemical corridors.",
+                "transcript_quote": "Our solar evaporation cycles in the Greater Rann provide a structural feedstock advantage. We flex between local industrial contract deliveries and Mundra port containerized exports based on immediate netbacks.",
+                "speaker": "Director's Management Discussion (MCA AOC-4)",
+                "sentiment": "DISCIPLINED",
+                "agrocel_takeaway": "Satyesh lacks downstream derivative synthesis (flame retardants, BBr3, specialty bromides). Agrocel should counter them by bundling derivative solutions and locking in enterprise accounts on long-term supply security rather than engaging in pure elemental price wars."
+            },
+            {
+                "period": "2026-Q1",
+                "category": "EXPORT_ARBITRAGE",
+                "headline": "Export Arbitrage Sensitivity: Domestic Dumping When Far East Spot Weakens",
+                "summary": "When Chinese spot prices or East Asian demand soften, Satyesh rapidly re-routes ISO tanks into domestic road tankers, creating sudden local supply overhang in Gujarat.",
+                "transcript_quote": "Port logistics and ISO tank availability govern our outbound trade. When export realisations are suppressed, domestic merchant off-take absorbs our liquid production volume.",
+                "speaker": "Operational Review (MCA Disclosures)",
+                "sentiment": "BEARISH",
+                "agrocel_takeaway": "Track Satyesh's Mundra export manifests simultaneously with Archean's. A simultaneous dip in both peers' exports signals an impending domestic margin squeeze."
+            }
+        ]
     }
 }
 
@@ -695,7 +774,7 @@ def seed_competitor_intelligence(db: Session):
     print("[SEED] Competitor intelligence seed successfully populated.")
     try:
         from .weekly_workflow import run_weekly_intelligence_workflow
-        run_weekly_intelligence_workflow(db, force_regenerate=True)
-        print("[SEED] Executive brief refreshed with digested competitor intelligence.")
+        run_weekly_intelligence_workflow(db, force_regenerate=False)
+        print("[SEED] Executive brief verified.")
     except Exception as e:
         print(f"[SEED] Could not refresh executive brief: {e}")

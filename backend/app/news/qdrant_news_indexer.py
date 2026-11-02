@@ -16,16 +16,15 @@ except ImportError:
     HAS_QDRANT = False
 
 from app.vector.embedding_provider import get_embedding_provider, BaseEmbeddingProvider
+from app.vector.qdrant_store import get_shared_qdrant_client, DEFAULT_STORAGE_DIR
 
 COLLECTION_NAME = "bromine_market_news"
-DEFAULT_STORAGE_DIR = Path(__file__).resolve().parents[3] / "Data" / "qdrant_storage"
 
 class QdrantNewsIndexer:
     """Manages vector embeddings and payload indexing for market news articles."""
 
     def __init__(self, storage_path: Optional[Path] = None):
         self.storage_path = storage_path or DEFAULT_STORAGE_DIR
-        self.storage_path.mkdir(parents=True, exist_ok=True)
         self.embedding_provider = get_embedding_provider()
         self.dimension = self.embedding_provider.dimension
         self.collection_name = COLLECTION_NAME
@@ -33,15 +32,9 @@ class QdrantNewsIndexer:
         self._init_client()
 
     def _init_client(self):
-        if not HAS_QDRANT or QdrantClient is None:
-            self.client = None
-            return
-        try:
-            self.client = QdrantClient(path=str(self.storage_path))
+        self.client = get_shared_qdrant_client(self.storage_path)
+        if self.client:
             self.ensure_collection()
-        except Exception as e:
-            print(f"[QDRANT NEWS INDEXER WARNING] Qdrant storage unavailable/locked: {e}")
-            self.client = None
 
     def ensure_collection(self):
         if not self.client:

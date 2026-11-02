@@ -67,22 +67,22 @@ export function TrendChart({
   const yearlyData = useMemo(() => {
     if (!data || !data.length) return [];
 
-    const map = new Map<string, { count: number; sums: Record<string, number> }>();
+    const map = new Map<string, { counts: Record<string, number>; sums: Record<string, number> }>();
 
     data.forEach(item => {
       const year = parseYear(item.date);
       if (!year) return;
 
       if (!map.has(year)) {
-        map.set(year, { count: 0, sums: {} });
+        map.set(year, { counts: {}, sums: {} });
       }
       const entry = map.get(year)!;
-      entry.count += 1;
 
       series.forEach(s => {
         const val = Number(item[s.key]);
         if (!Number.isNaN(val)) {
           entry.sums[s.key] = (entry.sums[s.key] || 0) + val;
+          entry.counts[s.key] = (entry.counts[s.key] || 0) + 1;
         }
       });
     });
@@ -104,7 +104,7 @@ export function TrendChart({
           lower.includes('nsr') ||
           lower.includes('average');
 
-        row[s.key] = isRate ? (entry.count > 0 ? total / entry.count : 0) : total;
+        row[s.key] = isRate ? (entry.counts[s.key] > 0 ? total / entry.counts[s.key] : 0) : total;
       });
       return row;
     });
@@ -123,6 +123,20 @@ export function TrendChart({
     if (viewMode === 'year') return `Year ${input}`;
     return displayDate(input);
   };
+
+  if (!data?.length) {
+    return (
+      <article className="chart-card chart-card-empty">
+        <div className="chart-head">
+          <div>
+            <h3>{title}</h3>
+            {annotation && <p>{annotation}</p>}
+          </div>
+        </div>
+        <div className="chart-empty-state">No verified observations are available for this view.</div>
+      </article>
+    );
+  }
 
   return (
     <article className="chart-card">
@@ -186,7 +200,7 @@ export function TrendChart({
               <YAxis tickFormatter={compact} tick={{ fontSize: 11, fill: '#69767e' }} width={55} />
               <Tooltip
                 labelFormatter={formatTooltipLabel}
-                formatter={(v: any, n: any) => [Number(v).toLocaleString(undefined, { maximumFractionDigits: 1 }), n]}
+                formatter={(v: any, n: any) => [`${Number(v).toLocaleString(undefined, { maximumFractionDigits: 1 })} ${unit}`, n]}
                 contentStyle={{
                   border: '1px solid #dce5e1',
                   borderRadius: 8,
@@ -229,7 +243,7 @@ export function TrendChart({
               )}
               <Tooltip
                 labelFormatter={formatTooltipLabel}
-                formatter={(v: any, n: any) => [Number(v).toLocaleString(undefined, { maximumFractionDigits: 1 }), n]}
+                formatter={(v: any, n: any) => [`${Number(v).toLocaleString(undefined, { maximumFractionDigits: 1 })} ${unit}`, n]}
                 contentStyle={{
                   border: '1px solid #dce5e1',
                   borderRadius: 8,
@@ -264,6 +278,61 @@ export function TrendChart({
               )}
             </ComposedChart>
           )}
+        </ResponsiveContainer>
+      </div>
+    </article>
+  );
+}
+
+export function ForecastFanChart({
+  title,
+  data,
+  unit = 'USD / MT'
+}: {
+  title: string;
+  data: Array<{ period?: string; label?: string; predicted_cif_usd_mt: number; lower_bound_usd: number; upper_bound_usd: number }>;
+  unit?: string;
+}) {
+  const chartData = data.map(point => ({
+    date: point.label || point.period || '',
+    forecast: point.predicted_cif_usd_mt,
+    lower: point.lower_bound_usd,
+    interval: Math.max(0, point.upper_bound_usd - point.lower_bound_usd),
+    upper: point.upper_bound_usd
+  }));
+
+  if (!chartData.length) {
+    return (
+      <article className="chart-card chart-card-empty">
+        <div className="chart-head"><div><h3>{title}</h3></div></div>
+        <div className="chart-empty-state">No verified forecast points are available for this view.</div>
+      </article>
+    );
+  }
+
+  return (
+    <article className="chart-card forecast-fan-chart">
+      <div className="chart-head">
+        <div>
+          <h3>{title}</h3>
+          <p>Central estimate with the model’s supplied prediction interval</p>
+        </div>
+        <span className="forecast-fan-legend"><i /> Prediction interval</span>
+      </div>
+      <div className="chart-wrap" role="img" aria-label={`${title}, predicted price and prediction interval`}>
+        <ResponsiveContainer width="100%" height="100%">
+          <ComposedChart data={chartData} margin={{ top: 12, right: 14, left: 0, bottom: 0 }}>
+            <CartesianGrid stroke="#e8ece9" vertical={false} />
+            <XAxis dataKey="date" tick={{ fontSize: 11, fill: '#69767e' }} minTickGap={22} />
+            <YAxis tickFormatter={compact} tick={{ fontSize: 11, fill: '#69767e' }} width={58} />
+            <Tooltip
+              formatter={(value: any, name: any) => [`${Number(value).toLocaleString(undefined, { maximumFractionDigits: 0 })} ${unit}`, String(name || '')]}
+              contentStyle={{ border: '1px solid #dce5e1', borderRadius: 8, boxShadow: '0 8px 24px rgba(20,45,40,.09)' }}
+            />
+            <Area type="monotone" dataKey="lower" stackId="interval" stroke="transparent" fill="transparent" legendType="none" name="Lower bound" />
+            <Area type="monotone" dataKey="interval" stackId="interval" stroke="transparent" fill="#99d6cc" fillOpacity={0.42} legendType="none" name="Prediction interval" />
+            <Line type="monotone" dataKey="forecast" name="Central estimate" stroke="#0f766e" strokeWidth={2.8} dot={{ r: 3, fill: '#fff', strokeWidth: 2 }} activeDot={{ r: 5 }} />
+          </ComposedChart>
         </ResponsiveContainer>
       </div>
     </article>

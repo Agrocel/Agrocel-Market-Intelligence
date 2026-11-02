@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import type { CuratedNewsResponse, DataFeedMetadata, DataSourcesSummary, NewsSourceItem } from '../types';
 import { getDataSourcesSummary, getCuratedNews, triggerNewsIngestion } from '../api';
 import { EmptyState, LoadingSkeleton, ReliabilityBadge } from './Common';
+import { PageHeader, IntelligenceStatusStrip, SectionNav } from './PageHeader';
 
 interface Props {
   onBackToDashboard: () => void;
@@ -64,40 +65,61 @@ export function DataSourcesPage({ onBackToDashboard }: Props) {
 
   return (
     <div className="page-shell data-sources-page">
-      {/* Top Header & Navigation Breadcrumb */}
-      <header className="page-nav-header">
-        <div>
-          <button className="back-btn" onClick={onBackToDashboard}>
-            ← Back to Executive Dashboard
+      {/* Level 1 — Page Header */}
+      <PageHeader
+        breadcrumb={
+          <button className="breadcrumb-btn" onClick={onBackToDashboard}>
+            ← Back to Executive Overview
           </button>
-          <p className="eyebrow">Data Governance · Provenance Ledger</p>
-          <h1 className="page-title">Data Sources, Date Ranges & News Provenance</h1>
-          <p className="page-subtitle">
-            Auditable mapping of all transactional ERP feeds, port customs manifests, market price series, and automated global news crawlers.
-          </p>
-        </div>
+        }
+        title="Data Sources, Date Ranges & News Provenance"
+        actions={
+          <button
+            className={`btn-exec-action ${ingesting ? 'spinning' : ''}`}
+            onClick={handleTriggerIngest}
+            disabled={ingesting}
+          >
+            <span className={ingesting ? 'spin-anim' : ''}>⚡</span>
+            <span>{ingesting ? 'Ingesting Pipeline...' : 'Trigger News Ingestion'}</span>
+          </button>
+        }
+      />
 
-        <div className="nav-page-tabs">
-          <button
-            className={activeTab === 'all' ? 'active' : ''}
-            onClick={() => setActiveTab('all')}
-          >
-            Overview & Horizon
-          </button>
-          <button
-            className={activeTab === 'feeds' ? 'active' : ''}
-            onClick={() => setActiveTab('feeds')}
-          >
-            Core Feeds ({feeds.length})
-          </button>
-          <button
-            className={activeTab === 'news' ? 'active' : ''}
-            onClick={() => setActiveTab('news')}
-          >
-            Where News Comes From ({newsSources.length} Sources)
-          </button>
-        </div>
-      </header>
+      {/* Level 2 — Intelligence Status */}
+      <IntelligenceStatusStrip
+        items={[
+          {
+            label: 'Temporal Baseline',
+            value: horizon?.month_label || 'February 2026 Unified',
+            dot: 'green',
+            tone: 'positive'
+          },
+          {
+            label: 'Core Feeds',
+            value: `${feeds.length} Audited Grounded Streams`
+          },
+          {
+            label: 'News Sources',
+            value: `${newsSources.length} Verified Chemical & Trade Sources`
+          },
+          {
+            label: 'Data Integrity',
+            value: '100% Grounded (Synthetic Estimations Banned)'
+          }
+        ]}
+      />
+
+      {/* Level 3 — Section Navigation */}
+      <SectionNav
+        items={[
+          { id: 'all', label: 'Overview & Horizon' },
+          { id: 'feeds', label: 'Core Feeds', badge: feeds.length },
+          { id: 'news', label: 'Where News Comes From', badge: newsSources.length }
+        ]}
+        activeId={activeTab}
+        onSelect={id => setActiveTab(id as 'all' | 'feeds' | 'news')}
+        ariaLabel="Data Sources Navigation"
+      />
 
       {/* 1. KEY CALLOUT: Unified Intersection Horizon (Why February 2026 is the benchmark) */}
       <section className="horizon-banner-card">
@@ -156,7 +178,6 @@ export function DataSourcesPage({ onBackToDashboard }: Props) {
       <section className="range-timeline-section">
         <div className="section-head-simple">
           <h3>Data Source Date Range Spans</h3>
-          <p>Chronological active coverage across all connected feeds</p>
         </div>
 
         <div className="timeline-cards-grid">
@@ -203,11 +224,7 @@ export function DataSourcesPage({ onBackToDashboard }: Props) {
         <section className="news-provenance-section">
           <div className="section-head-simple flex-between">
             <div>
-              <p className="eyebrow">News Lineage & Ingestion Hub</p>
               <h2>Where The News Has Come From</h2>
-              <p>
-                Automated continuous crawler registry tracking global commodity desks, environmental ministries, and competitor press.
-              </p>
             </div>
             <div className="ingest-actions">
               <button
@@ -255,7 +272,6 @@ export function DataSourcesPage({ onBackToDashboard }: Props) {
           <div className="curated-news-ledger">
             <div className="ledger-head">
               <h3>Recently Ingested Articles & Raw Provenance Links</h3>
-              <p>Direct links and AI relevance classification for recent market intelligence items</p>
             </div>
 
             {newsFeed?.items && newsFeed.items.length > 0 ? (

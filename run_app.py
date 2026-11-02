@@ -36,6 +36,33 @@ def stream_output(process, prefix, color_code):
     except Exception:
         pass
 
+def free_port(port: int):
+    """Detects and terminates any orphan process listening on the given port (Windows and Unix)."""
+    if sys.platform == "win32":
+        try:
+            out = subprocess.check_output(f'netstat -ano | findstr :{port}', shell=True, text=True, errors="ignore")
+            killed_pids = set()
+            for line in out.strip().splitlines():
+                parts = line.strip().split()
+                if len(parts) >= 5 and "LISTENING" in parts:
+                    pid = parts[-1]
+                    if pid != "0" and pid != str(os.getpid()) and pid not in killed_pids:
+                        killed_pids.add(pid)
+                        print(f"\033[33m[LAUNCHER] Releasing port {port} (terminating stale PID: {pid})...\033[0m", flush=True)
+                        subprocess.call(["taskkill", "/F", "/T", "/PID", pid], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            if killed_pids:
+                time.sleep(1.0)
+        except Exception:
+            pass
+    else:
+        try:
+            out = subprocess.check_output(f'lsof -ti:{port}', shell=True, text=True, errors="ignore")
+            for pid in out.strip().splitlines():
+                if pid:
+                    subprocess.call(["kill", "-9", pid], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        except Exception:
+            pass
+
 def cleanup():
     """Terminates child processes on shutdown."""
     print("\n\033[33m[LAUNCHER] Shutting down application services...\033[0m", flush=True)
@@ -47,6 +74,8 @@ def cleanup():
                 p.terminate()
         except Exception:
             pass
+    free_port(8000)
+    free_port(5173)
     print("\033[32m[LAUNCHER] Services stopped successfully.\033[0m", flush=True)
 
 def signal_handler(sig, frame):
@@ -62,20 +91,36 @@ def main():
     print("\033[1;36m   AGROCEL BROMINE MARKET INTELLIGENCE PILOT - LOCAL RUNNER\033[0m")
     print("\033[1;36m" + "=" * 70 + "\033[0m\n")
 
+    # Clean any stale processes holding ports 8000 or 5173
+    free_port(8000)
+    free_port(5173)
+
     # Register signals for graceful shutdown
     signal.signal(signal.SIGINT, signal_handler)
     signal.signal(signal.SIGTERM, signal_handler)
 
-    # Detect python interpreter with uvicorn installed
+    # Detect python interpreter with uvicorn and required dependencies installed
     py_exec = sys.executable
-    for candidate in [sys.executable, "python", "py -3.12", "python3"]:
+    candidates = ["python", sys.executable, "py -3.12", "python3"]
+    # First priority: interpreter with qdrant_client, uvicorn, and fastapi
+    for candidate in candidates:
         try:
-            r = subprocess.run([candidate, "-c", "import uvicorn, fastapi"], capture_output=True, timeout=2)
+            r = subprocess.run([candidate, "-c", "import uvicorn, fastapi, qdrant_client"], capture_output=True, timeout=2)
             if r.returncode == 0:
                 py_exec = candidate
                 break
         except Exception:
             pass
+    else:
+        # Fallback: interpreter with uvicorn and fastapi
+        for candidate in candidates:
+            try:
+                r = subprocess.run([candidate, "-c", "import uvicorn, fastapi"], capture_output=True, timeout=2)
+                if r.returncode == 0:
+                    py_exec = candidate
+                    break
+            except Exception:
+                pass
 
     # 1. Start Backend
     print(f"\033[32m[1/2] Starting FastAPI Backend ({py_exec}) on http://localhost:8000 ...\033[0m", flush=True)
@@ -85,6 +130,7 @@ def main():
         cwd=str(BACKEND_DIR),
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
+        stdin=subprocess.DEVNULL,
         text=True,
         encoding="utf-8",
         errors="replace",
@@ -101,6 +147,7 @@ def main():
         cwd=str(FRONTEND_DIR),
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
+        stdin=subprocess.DEVNULL,
         text=True,
         encoding="utf-8",
         errors="replace",
@@ -121,6 +168,8 @@ def main():
     print("\n\033[90mPress Ctrl+C to stop all services.\033[0m\n", flush=True)
 
     try:
+        # Give services a brief moment to initialize before monitoring
+        time.sleep(2.0)
         while True:
             # Check if any process died unexpectedly
             if backend_proc.poll() is not None:

@@ -232,86 +232,28 @@ HISTORICAL_SUPPLY_CHANGES = [
 ]
 
 # ==============================================================================
-# Deterministic Market Balance Calculator
-# Evaluates 6 empirical factors to produce a transparent market balance rating
+# ==============================================================================
+# Dynamic Market Balance Calculator
+# Evaluates empirical indicators (trade momentum, price slope, realization spreads, active disruptions)
 # ==============================================================================
 
 def calculate_market_balance(db: Session) -> Dict[str, Any]:
     """
-    Computes a deterministic global bromine market balance assessment based on:
-    1. China supply deficit (Shandong utilization < 45% -> +2 tightening)
-    2. Red Sea logistics routing (+14-21 days, +$180/MT -> +1 tightening)
-    3. Indian domestic synthesis demand absorption (Firm baseline -> +1 firm)
-    4. Global flame retardant demand trend (Moderate cyclical recovery -> 0 neutral)
-    5. Global capacity additions (Incremental Kutch only, no new basins -> 0 neutral)
-    6. US Smackover captive allocation (Captive focus, no dumping -> 0 neutral)
+    Computes a transparent, empirical market balance rating from actual database records.
+    Delegates to the dedicated market balance analytical engine.
+    If sufficient data is unavailable, returns: 'Market balance: Insufficient verified data'.
     """
-    factors = [
-        {
-            "factor_name": "Chinese Subterranean Brine Depletion & Audits",
-            "weight": 2.0,
-            "direction": "TIGHTENING",
-            "score": +2,
-            "evidence": "Shandong extraction rates depressed to 42.5% due to environmental audits and declining brine salinity (~120 ppm). Annual domestic deficit ~55,000 MT."
-        },
-        {
-            "factor_name": "Middle Eastern Logistics & Red Sea Surcharges",
-            "weight": 1.5,
-            "direction": "TIGHTENING",
-            "score": +1,
-            "evidence": "Dead Sea seaborne exports to Asia rerouted around the Cape of Good Hope, adding 14-21 days transit and $180-$250/MT ocean freight to landed CIF."
-        },
-        {
-            "factor_name": "Indian Agrochemical & API Synthesis Absorption",
-            "weight": 1.5,
-            "direction": "FIRM_DEMAND",
-            "score": +1,
-            "evidence": "Indian domestic merchant volume absorption remains resilient at ~65,000 MT/year, maintaining persistent import parity premium over domestic sales."
-        },
-        {
-            "factor_name": "Global Downstream Flame Retardant Recovery",
-            "weight": 1.0,
-            "direction": "NEUTRAL_RECOVERY",
-            "score": 0,
-            "evidence": "Consumer electronics resin demand stabilizing; automotive electronics and AI server demand expanding steadily without supply-demand dislocation."
-        },
-        {
-            "factor_name": "Global Green-field Capacity Pipeline",
-            "weight": 1.0,
-            "direction": "NEUTRAL",
-            "score": 0,
-            "evidence": "No new commercial bromine brine basins active globally. Expansion strictly limited to brownfield debottlenecking in Kutch (Agrocel and Archean)."
-        }
-    ]
-
-    total_score = sum(f["score"] for f in factors)
-    
-    if total_score >= 3:
-        status = "TIGHTENING TO STABLE"
-        code = "TIGHTENING"
-        rationale = "Global bromine market balance is TIGHTENING TO STABLE. Structural depletion and environmental audits in China have removed ~45,000 MT of potential supply, while Middle East maritime transit delays insulate Asian and Indian domestic markets from prompt spot surplus."
-    elif total_score >= 1:
-        status = "STABLE / BALANCED"
-        code = "STABLE"
-        rationale = "Global bromine market balance is STABLE. Primary extraction in Israel and Jordan remains continuous, offsetting structural depletion in China with predictable contract flows."
-    elif total_score <= -2:
-        status = "LOOSENING"
-        code = "LOOSENING"
-        rationale = "Global bromine supply is loosening due to downstream destocking and unconstrained production."
-    else:
-        status = "MIXED / UNCERTAIN"
-        code = "MIXED"
-        rationale = "Market signals are mixed: logistical bottlenecks support landed prices while downstream end-market recovery varies by sector."
-
+    from .services.market_balance_engine import calculate_dynamic_market_balance
+    res = calculate_dynamic_market_balance(db)
     return {
-        "status": status,
-        "code": code,
-        "score": total_score,
-        "max_score": 5,
-        "confidence_level": "HIGH (Empirical Grounding)",
-        "rationale": rationale,
-        "factors": factors,
-        "refresh_date": "2026-03-15"
+        "status": res["market_balance"],
+        "code": res["market_balance_code"],
+        "score": res["total_score"],
+        "max_score": res["max_possible_score"],
+        "confidence_level": f"{res['evaluation_confidence']} (Empirical Grounding)",
+        "rationale": res["rationale"],
+        "factors": res["factors"],
+        "refresh_date": datetime.utcnow().strftime("%Y-%m-%d")
     }
 
 # ==============================================================================
@@ -699,6 +641,26 @@ def get_enhanced_supply_intelligence(db: Session, force_refresh: bool = False) -
         force_refresh=force_refresh
     )
 
+    # Dynamic calculation of domestic pricing headroom
+    headroom_val = None
+    try:
+        from .models import SalesRecord, TradeRecord
+        from .services.currency_service import get_usd_inr_rate
+        ag_sales = db.execute(
+            select(func.sum(SalesRecord.revenue_inr) / func.sum(SalesRecord.quantity_mt))
+            .where(SalesRecord.quantity_mt > 0, SalesRecord.revenue_inr > 0)
+        ).scalar()
+        cif_imp = db.execute(
+            select(func.sum(TradeRecord.trade_value_usd) / func.sum(TradeRecord.quantity_mt))
+            .where(TradeRecord.trade_direction == 'IMPORT', TradeRecord.quantity_mt > 0)
+        ).scalar()
+        if ag_sales and cif_imp:
+            ag_kg = float(ag_sales) / 1000.0
+            cif_kg = (float(cif_imp) * get_usd_inr_rate()) / 1000.0
+            headroom_val = round(cif_kg - ag_kg, 1)
+    except Exception:
+        headroom_val = None
+
     # 5. Executive Supply Summary Panel Data
     executive_summary = {
         "market_balance_status": market_balance["status"],
@@ -718,7 +680,7 @@ def get_enhanced_supply_intelligence(db: Session, force_refresh: bool = False) -
             "effective_global_utilization_pct": GLOBAL_CAPACITY_BASELINE["effective_global_utilization_pct"],
             "china_structural_deficit_mt": 55000,
             "middle_east_freight_surcharge_usd_mt": 215,
-            "india_domestic_price_headroom_inr_kg": 58.8
+            "india_domestic_price_headroom_inr_kg": headroom_val
         }
     }
 

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import type { DashboardData, Section6PlantOutages, PlantOutageItem, DataGroundingItem } from '../types';
 import type { AppRoute } from '../navigation';
+import { PageHeader, IntelligenceStatusStrip, SectionNav } from '../components/PageHeader';
 
 interface Props {
   data: DashboardData;
@@ -14,6 +15,20 @@ export function PlantOutagesPage({ data, onNavigate }: Props) {
   const outagesData: Section6PlantOutages | undefined = execOverview?.section_6_plant_outages;
 
   const [filterType, setFilterType] = useState<'ALL' | 'ACTIVE' | 'HISTORICAL'>('ALL');
+  const [activeSection, setActiveSection] = useState<string>('disruption-radar');
+
+  if (!outagesData?.outages?.length) {
+    return (
+      <div className="page-shell plant-outages-page">
+        <section className="exec-card decision-data-state">
+          <span className="decision-panel-eyebrow">Supply disruption register</span>
+          <h1>Verified outage data is not available</h1>
+          <p>Load the current plant and logistics disruption register before using this page for supply-risk decisions.</p>
+          <button type="button" className="btn-snapshot-cta" onClick={() => onNavigate('overview')}>Return to overview <span>→</span></button>
+        </section>
+      </div>
+    );
+  }
 
   const outages: PlantOutageItem[] = outagesData?.outages || [
     {
@@ -84,29 +99,58 @@ export function PlantOutagesPage({ data, onNavigate }: Props) {
 
   return (
     <div className="page-shell plant-outages-page">
-      {/* Page Header */}
-      <header className="page-header-bar">
-        <div className="ph-breadcrumb">
-          <button className="breadcrumb-btn" onClick={() => onNavigate('overview')}>Executive Overview</button>
-          <span className="breadcrumb-sep">/</span>
-          <span className="breadcrumb-current">07. Plant Outages & Disruptions</span>
-        </div>
-        <div className="ph-main-title-row">
-          <div>
-            <h1 className="page-main-title font-serif">Plant Outages & Supply Disruptions</h1>
-            <p className="page-subtitle text-muted">
-              Monitoring global supply bottleneck events, environmental shut-down orders, maritime canal diversions, and facility turnarounds.
-            </p>
-          </div>
-          <div className="ph-badge-cluster">
-            <span className="status-pill status-red">Active Outages: <b>{activeCount}</b></span>
-            <span className="status-pill status-blue">Historical Resolved: <b>{historicalCount}</b></span>
-          </div>
-        </div>
-      </header>
+      {/* Level 1 — Page Header */}
+      <PageHeader
+        breadcrumb={
+          <>
+            <button className="breadcrumb-btn" onClick={() => onNavigate('overview')}>Executive Overview</button>
+            <span className="breadcrumb-sep">/</span>
+            <span className="breadcrumb-current">Plant Outages & Disruptions</span>
+          </>
+        }
+        title="Plant Outages & Supply Disruptions"
+      />
+
+      {/* Level 2 — Intelligence Status */}
+      <IntelligenceStatusStrip
+        items={[
+          {
+            label: 'Active Disruption Corridors',
+            value: `${activeCount} Events Ongoing`,
+            dot: 'red',
+            tone: 'critical'
+          },
+          {
+            label: 'Resolved Facilities',
+            value: `${historicalCount} Historical Restorations`,
+            tone: 'positive'
+          },
+          {
+            label: 'Market Vulnerability',
+            value: outagesData?.summary?.market_vulnerability || 'Moderate-High',
+            tone: 'warning'
+          },
+          {
+            label: 'Monitored Basins',
+            value: 'Shandong (China), Dead Sea, Smackover & Kutch'
+          }
+        ]}
+      />
+
+      {/* Level 3 — Section Navigation */}
+      <SectionNav
+        items={[
+          { id: 'disruption-radar', label: 'Disruption Radar' },
+          { id: 'disruption-register', label: 'Incident Register', badge: outages.length },
+          { id: 'commercial-implications', label: 'Commercial Implications' }
+        ]}
+        activeId={activeSection}
+        onSelect={setActiveSection}
+        ariaLabel="Outages Section Navigation"
+      />
 
       {/* A. Current Disruption Overview & Market Vulnerability */}
-      <section className="exec-card section-container outage-summary-card">
+      <section id="disruption-radar" className="exec-card section-container outage-summary-card">
         <div className="section-head-bar">
           <div>
             <span className="section-step-num">DISRUPTION RADAR</span>
@@ -115,11 +159,19 @@ export function PlantOutagesPage({ data, onNavigate }: Props) {
           <span className="status-pill status-amber">Vulnerability: <b>MODERATE-HIGH</b></span>
         </div>
 
-        <div className="outage-summary-body">
-          <p className="lead-paragraph">
-            {outagesData?.summary?.market_vulnerability ||
-              'Global supply vulnerability remains MODERATE-HIGH. Chinese Ministry of Ecology environmental enforcement has transitioned from seasonal halts into structural operating quotas across Shandong, removing 30,000–35,000 MT of merchant elemental capacity. Simultaneously, maritime rerouting around the Cape of Good Hope adds 14–21 days and $150–$250/MT ocean freight onto Dead Sea imports into India, effectively insulating domestic realizations from foreign dumping.'}
-          </p>
+        <div className="synthesis-quote-block" style={{ marginBottom: '1.25rem' }}>
+          <div className="sq-icon">🛡️</div>
+          <div className="sq-text-area">
+            <h3 className="sq-headline">
+              Structural Operating Quotas & Maritime Rerouting Sustain Domestic Price Insulation
+            </h3>
+            <div className="sq-body">
+              <p style={{ margin: 0, color: 'var(--text-secondary, #334155)', lineHeight: 1.55 }}>
+                {outagesData?.summary?.market_vulnerability ||
+                  'Global supply vulnerability is rated Moderate-High. Chinese groundwater quotas permanently constrain Shandong merchant extraction, while Cape of Good Hope diversions add 14–21 days and $150–$250/MT freight surcharges onto Indian landed import parity.'}
+              </p>
+            </div>
+          </div>
         </div>
 
         <div className="outage-kpis-quad">
@@ -134,27 +186,24 @@ export function PlantOutagesPage({ data, onNavigate }: Props) {
             <span className="okpi-sub">Shandong Quotas + Red Sea Bypass</span>
           </div>
           <div className="okpi-box">
-            <span className="okpi-lbl">Annualized Chinese Deficit</span>
-            <strong className="okpi-val font-bold text-teal">~55,000 MT/yr</strong>
-            <span className="okpi-sub">Sustains global price floor</span>
+            <span className="okpi-lbl">Market vulnerability</span>
+            <strong className="okpi-val font-bold text-teal">{outagesData.summary.market_vulnerability || '—'}</strong>
+            <span className="okpi-sub">Current verified disruption assessment</span>
           </div>
           <div className="okpi-box">
-            <span className="okpi-lbl">Agrocel Plant Status</span>
-            <strong className="okpi-val font-bold text-positive">100% OPERATIONAL</strong>
-            <span className="okpi-sub">Kutch facility running at 94.1% utilization</span>
+            <span className="okpi-lbl">Historical disruptions</span>
+            <strong className="okpi-val font-bold text-positive">{outagesData.summary.historical_disruptions}</strong>
+            <span className="okpi-sub">Resolved or historical entries in the register</span>
           </div>
         </div>
       </section>
 
       {/* B. Disruption Register (Interactive Filter Table) */}
-      <section className="exec-card section-container disruption-register-section">
+      <section id="disruption-register" className="exec-card section-container disruption-register-section">
         <div className="section-head-bar">
           <div>
             <span className="section-step-num">INCIDENT REGISTER</span>
             <h2 className="section-title">Global Disruption & Maintenance Log</h2>
-            <p className="section-subtitle-muted">
-              Distinguishing verified active operational constraints from historical turnarounds and completed repairs.
-            </p>
           </div>
           <div className="filter-pill-group">
             <button
@@ -217,7 +266,7 @@ export function PlantOutagesPage({ data, onNavigate }: Props) {
       </section>
 
       {/* C. Commercial Relevance for Agrocel */}
-      <section className="exec-card section-container outage-relevance-card">
+      <section id="commercial-implications" className="exec-card section-container outage-relevance-card">
         <div className="takeaway-card-inner">
           <div className="takeaway-header-bar">
             <div>

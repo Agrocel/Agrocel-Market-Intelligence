@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import type { DashboardData, Section3Demand, DataGroundingItem } from '../types';
 import type { AppRoute } from '../navigation';
 import { DataGroundedText } from '../components/DataProvenance';
+import { PageHeader, IntelligenceStatusStrip, SectionNav } from '../components/PageHeader';
 
 interface Props {
   data: DashboardData;
@@ -20,58 +21,25 @@ export function DemandIntelligencePage({ data, onNavigate, onSelectGrounding }: 
   const demand: Section3Demand | undefined = execOverview?.section_3_demand;
 
   const [selectedSector, setSelectedSector] = useState<string | null>(null);
+  const [activeSection, setActiveSection] = useState<string>('demand-assessment');
 
-  // Fallback verified data if section 3 is loading
-  const sectors = demand?.downstream_sectors || [
-    {
-      sector: 'Brominated Flame Retardants (BFRs)',
-      share_pct: 42.0,
-      key_products: 'TBBA, DBDPE, Polymeric Brominated Flame Retardants',
-      end_markets: 'PCBs, automotive electronics, server housings, construction insulation',
-      trend: 'Moderate Recovery',
-      commentary: 'AI data center hardware and automotive electrification wiring harness requirements are driving volume stabilization.'
-    },
-    {
-      sector: 'Agrochemical Intermediates',
-      share_pct: 22.0,
-      key_products: 'Bromo-chloro compounds, bromo-benzene, alkyl bromides, HBr derivatives',
-      end_markets: 'Active crop protection synthesis, synthetic pyrethroids, triazole fungicides',
-      trend: 'Robust Expansion in India',
-      commentary: 'India chemical corridor in Gujarat (Dahej, Panoli, Jhagadia) driving strong domestic synthesis of off-patent active ingredients.'
-    },
-    {
-      sector: 'Pharmaceuticals & Fine Chemicals',
-      share_pct: 16.0,
-      key_products: 'Hydrobromic acid, sodium bromide, organic bromo-intermediates',
-      end_markets: 'Active Pharmaceutical Ingredients (APIs), cardiovascular therapies, sedatives',
-      trend: 'High-Value Steady Growth',
-      commentary: 'Resilient, price-inelastic demand supported by Indian formulation exports to US and European healthcare markets.'
-    },
-    {
-      sector: 'Clear Brine Drilling & Completion Fluids',
-      share_pct: 11.0,
-      key_products: 'Calcium Bromide (CaBr2), Zinc Bromide (ZnBr2), Sodium Bromide (NaBr)',
-      end_markets: 'Deepwater offshore oil & gas exploration, geothermal wells',
-      trend: 'Expanding',
-      commentary: 'Deepwater offshore drilling and specialized high-density completion fluid requirements in Western Australia and US Gulf.'
-    },
-    {
-      sector: 'Water Treatment & Industrial Biocides',
-      share_pct: 9.0,
-      key_products: 'DBNPA, BCDMH, stabilized bromine solutions',
-      end_markets: 'Industrial cooling towers, pulp & paper mills, commercial water sanitization',
-      trend: 'Stable',
-      commentary: 'Environmentally preferred alternative to chlorine in high-pH cooling systems and industrial effluent plants.'
-    }
-  ];
+  if (!demand?.downstream_sectors?.length || !demand.regional_demand?.length) {
+    return (
+      <div className="page-shell demand-intelligence-page">
+        <section className="exec-card decision-data-state">
+          <span className="decision-panel-eyebrow">Demand intelligence</span>
+          <h1>Verified demand data is not available</h1>
+          <p>Load a verified downstream-sector and regional-demand update before using this page for management decisions.</p>
+          <button type="button" className="btn-snapshot-cta" onClick={() => onNavigate('overview')}>Return to overview <span>→</span></button>
+        </section>
+      </div>
+    );
+  }
 
-  const regions = demand?.regional_demand || [
-    { region: 'China', share_pct: 39.0, annual_consumption_mt: 150000, status: 'World\'s largest consumer; reliant on 50k+ MT imports' },
-    { region: 'India', share_pct: 17.0, annual_consumption_mt: 65000, status: 'Fastest-growing market (+7-9% CAGR) driven by agrochem/pharma' },
-    { region: 'United States', share_pct: 15.0, annual_consumption_mt: 58000, status: 'Driven by oilfield completion fluids and flame retardants' },
-    { region: 'Europe', share_pct: 13.0, annual_consumption_mt: 50000, status: 'Transitioning to polymeric non-toxic flame retardants' },
-    { region: 'Rest of World', share_pct: 16.0, annual_consumption_mt: 62000, status: 'Electronics compounders and Australian resource extraction' }
-  ];
+  const sectors = demand.downstream_sectors;
+  const regions = demand.regional_demand;
+  const leadingSector = [...sectors].sort((a, b) => b.share_pct - a.share_pct)[0];
+  const indiaDemand = regions.find(region => region.region.toLowerCase() === 'india');
 
   // Internal customer segments from sales records
   const totalAgrocelSales = sales.reduce((sum, s) => sum + (Number(s.quantity_mt) || 0), 0);
@@ -83,29 +51,58 @@ export function DemandIntelligencePage({ data, onNavigate, onSelectGrounding }: 
 
   return (
     <div className="page-shell demand-intelligence-page">
-      {/* Page Header */}
-      <header className="page-header-bar">
-        <div className="ph-breadcrumb">
-          <button className="breadcrumb-btn" onClick={() => onNavigate('overview')}>Executive Overview</button>
-          <span className="breadcrumb-sep">/</span>
-          <span className="breadcrumb-current">04. Demand Intelligence</span>
-        </div>
-        <div className="ph-main-title-row">
-          <div>
-            <h1 className="page-main-title font-serif">Global & Domestic Demand Intelligence</h1>
-            <p className="page-subtitle text-muted">
-              Downstream consuming sector analysis, geographic market absorption, structural elasticity, and Agrocel commercial off-take.
-            </p>
-          </div>
-          <div className="ph-badge-cluster">
-            <span className="status-pill status-blue">Global Demand: <b>~385,000 MT</b></span>
-            <span className="status-pill status-green">India CAGR: <b>+7.8%</b></span>
-          </div>
-        </div>
-      </header>
+      {/* Level 1 — Page Header */}
+      <PageHeader
+        breadcrumb={
+          <>
+            <button className="breadcrumb-btn" onClick={() => onNavigate('overview')}>Executive Overview</button>
+            <span className="breadcrumb-sep">/</span>
+            <span className="breadcrumb-current">Demand Intelligence</span>
+          </>
+        }
+        title="Global & Domestic Demand Intelligence"
+      />
+
+      {/* Level 2 — Intelligence Status */}
+      <IntelligenceStatusStrip
+        items={[
+          {
+            label: 'Anchor Sector',
+            value: leadingSector ? `${leadingSector.sector} (${num(leadingSector.share_pct, 1)}%)` : '—',
+            dot: 'blue'
+          },
+          {
+            label: 'Sector Outlook',
+            value: activeSectorObj?.trend || 'Expanding',
+            tone: 'positive'
+          },
+          {
+            label: 'India Consumption',
+            value: indiaDemand ? `${num(indiaDemand.annual_consumption_mt)} MT/year` : '—'
+          },
+          {
+            label: 'Agrocel Sales Volume',
+            value: `${num(totalAgrocelSales, 0)} MT`,
+            tone: 'positive'
+          }
+        ]}
+      />
+
+      {/* Level 3 — Section Navigation */}
+      <SectionNav
+        items={[
+          { id: 'demand-assessment', label: 'Executive Assessment' },
+          { id: 'downstream-sectors', label: 'Downstream Sectors' },
+          { id: 'regional-demand', label: 'Regional Absorption' },
+          { id: 'commercial-strategy', label: 'Commercial Guidance' }
+        ]}
+        activeId={activeSection}
+        onSelect={setActiveSection}
+        ariaLabel="Demand Section Navigation"
+      />
 
       {/* A. Executive Demand Assessment */}
-      <section className="exec-card section-container demand-executive-brief">
+      <section id="demand-assessment" className="exec-card section-container demand-executive-brief">
         <div className="section-head-bar">
           <div>
             <span className="section-step-num">EXECUTIVE ASSESSMENT</span>
@@ -113,50 +110,56 @@ export function DemandIntelligencePage({ data, onNavigate, onSelectGrounding }: 
           </div>
           <span className="evidence-badge">Validated Downstream Baseline · 2026</span>
         </div>
-        <div className="demand-brief-body">
-          <p className="lead-paragraph">
-            {demand?.ai_demand_interpretation || (
-              <>
-                Global bromine demand is structurally bifurcated between <strong>commodity flame retardants (42% share)</strong>, which are undergoing a gradual post-electronics recovery, and <strong>specialty synthesis sectors (agrochemicals, pharma, and clear brine fluids)</strong>, which exhibit firm, price-inelastic volume expansion. In India, domestic demand is growing at <strong>7–9% CAGR</strong>, heavily insulated from global electronics cycles by Dahej, Panoli, and Visakhapatnam chemical synthesis clusters.
-              </>
-            )}
-          </p>
+
+        <div className="synthesis-quote-block" style={{ marginBottom: '1.25rem' }}>
+          <div className="sq-icon">💡</div>
+          <div className="sq-text-area">
+            <h3 className="sq-headline">
+              Specialty Synthesis Insulates Indian Offtake Against Global Cyclicality
+            </h3>
+            <div className="sq-body">
+              <p style={{ margin: 0, color: 'var(--text-secondary, #334155)', lineHeight: 1.55 }}>
+                {demand?.ai_demand_interpretation || (
+                  <>
+                    Indian bromine demand is expanding at <strong>7–9% CAGR</strong> driven by agrochemical and API synthesis clusters in Dahej and Panoli. While global flame retardants (42% share) recover gradually, domestic specialty off-take remains firm and price-inelastic.
+                  </>
+                )}
+              </p>
+            </div>
+          </div>
         </div>
 
         {/* 4 Primary Demand Indicators */}
         <div className="demand-kpi-quad">
           <div className="dkpi-box">
             <span className="dkpi-label">Anchor Downstream Sector</span>
-            <strong className="dkpi-val font-bold text-teal">Flame Retardants (42%)</strong>
-            <span className="dkpi-sub">Stabilizing on AI servers & EV cabling</span>
+            <strong className="dkpi-val font-bold text-teal">{leadingSector ? `${leadingSector.sector} (${num(leadingSector.share_pct, 1)}%)` : '—'}</strong>
+            <span className="dkpi-sub">Largest global demand category</span>
           </div>
           <div className="dkpi-box">
-            <span className="dkpi-label">Highest Growth Driver</span>
-            <strong className="dkpi-val font-bold text-positive">Agrochemicals (+9.2%)</strong>
-            <span className="dkpi-sub">Indian off-patent active synthesis</span>
+            <span className="dkpi-label">Selected sector outlook</span>
+            <strong className="dkpi-val font-bold text-positive">{activeSectorObj?.trend || '—'}</strong>
+            <span className="dkpi-sub">Verified sector momentum</span>
           </div>
           <div className="dkpi-box">
             <span className="dkpi-label">India Annual Consumption</span>
-            <strong className="dkpi-val font-bold">~65,000 MT/year</strong>
-            <span className="dkpi-sub">World's 2nd largest net elemental buyer</span>
+            <strong className="dkpi-val font-bold">{indiaDemand ? `${num(indiaDemand.annual_consumption_mt)} MT/year` : '—'}</strong>
+            <span className="dkpi-sub">Domestic absorption footprint</span>
           </div>
           <div className="dkpi-box">
             <span className="dkpi-label">Agrocel Domestic Run-Rate</span>
-            <strong className="dkpi-val font-bold text-brand">{num(totalAgrocelSales || 16930, 0)} MT</strong>
-            <span className="dkpi-sub">~26% of total Indian domestic absorption</span>
+            <strong className="dkpi-val font-bold text-brand">{num(totalAgrocelSales, 0)} MT</strong>
+            <span className="dkpi-sub">Verified sales ledger volume</span>
           </div>
         </div>
       </section>
 
       {/* B. Demand by End-Use Industry & Interactive Dossier */}
-      <section className="exec-card section-container downstream-sectors-section">
+      <section id="downstream-sectors" className="exec-card section-container downstream-sectors-section">
         <div className="section-head-bar">
           <div>
             <span className="section-step-num">DOWNSTREAM DECOMPOSITION</span>
             <h2 className="section-title">End-Use Consuming Industry Breakdown</h2>
-            <p className="section-subtitle-muted">
-              Select an industry to inspect product derivatives, end-market exposures, and commercial implications for Agrocel.
-            </p>
           </div>
         </div>
 
@@ -255,14 +258,11 @@ export function DemandIntelligencePage({ data, onNavigate, onSelectGrounding }: 
       </section>
 
       {/* C. Geographic Demand & Regional Patterns */}
-      <section className="exec-card section-container regional-demand-section">
+      <section id="regional-demand" className="exec-card section-container regional-demand-section">
         <div className="section-head-bar">
           <div>
             <span className="section-step-num">GEOGRAPHIC ABSORPTION</span>
             <h2 className="section-title">Regional Consumption & Trade Imbalances</h2>
-            <p className="section-subtitle-muted">
-              Annual bromine absorption by consuming hub and structural reliance on foreign elemental imports.
-            </p>
           </div>
         </div>
 
@@ -309,7 +309,7 @@ export function DemandIntelligencePage({ data, onNavigate, onSelectGrounding }: 
       </section>
 
       {/* D. Agrocel Commercial Relevance & Takeaway */}
-      <section className="exec-card section-container demand-takeaway-card">
+      <section id="commercial-strategy" className="exec-card section-container demand-takeaway-card">
         <div className="takeaway-card-inner">
           <div className="takeaway-header-bar">
             <div>
@@ -322,21 +322,21 @@ export function DemandIntelligencePage({ data, onNavigate, onSelectGrounding }: 
               <div className="tpc-icon">🌱</div>
               <h4 className="tpc-title">Agrochemical Decoupling</h4>
               <p className="tpc-body">
-                Unlike global commodity markets tied to consumer electronics, <strong>India\'s crop protection sector is expanding at ~9% CAGR</strong>. Agrocel domestic volume is shielded by long-term customer relationships with Gujarat formulation leaders.
+                India's crop protection sector is expanding at <strong>~9% CAGR</strong>. Agrocel domestic volume is insulated from global electronics by multi-year relationships with Gujarat formulation leaders.
               </p>
             </div>
             <div className="tp-card">
               <div className="tpc-icon">💊</div>
               <h4 className="tpc-title">API Purity Premium</h4>
               <p className="tpc-body">
-                Pharmaceutical synthesizers demand stringent low-chlorine (&lt;0.05%) elemental bromine. Agrocel marine bittern extraction process delivers consistent high-assay specifications, commanding <strong>₹5–8/kg realization premiums</strong> over crude imports.
+                Pharma synthesizers require low-chlorine (&lt;0.05%) bromine. Agrocel marine bittern extraction delivers certified high-assay specs, capturing <strong>₹5–8/kg premiums</strong> over crude imports.
               </p>
             </div>
             <div className="tp-card">
               <div className="tpc-icon">📈</div>
               <h4 className="tpc-title">Captive Derivative Transition</h4>
               <p className="tpc-body">
-                Management strategy prioritizes forward-integrating <strong>20–30% of elemental production</strong> into captive hydrobromic acid and specialty bromides, locking in structural gross margin defense against merchant liquid cycle fluctuations.
+                Forward-integrating <strong>20–30% of elemental volume</strong> into captive HBr and specialty derivatives locks in margin defense against merchant liquid cycle fluctuations.
               </p>
             </div>
           </div>
